@@ -1,15 +1,17 @@
 import cv2
-
-
-webcam = cv2.VideoCapture(1)
-
-
+import numpy as np
+cap = cv2.VideoCapture(0)
 
 
 while True:
-    ret, frame = webcam.read()
-    cv2.imshow("Webcam Feed", frame)
-
+    ret, frame = cap.read()
+    height, width, _ = frame.shape
     
+    center_x, center_y = width // 2, height // 2
+    color = frame[center_y, center_x]
+    b, g, r = color
+    print(f'R:{r}, G: {g}, B: {b}')
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
+cap.release()
+cv2.destroyAllWindows()
