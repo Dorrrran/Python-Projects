@@ -10,9 +10,11 @@ while True:
     center_x, center_y = width // 2, height // 2
     color = frame[center_y, center_x]
     b, g, r = color
-    print(f'R:{r}, G: {g}, B: {b}')
     cv2.imshow("window",frame)
-    if cv2.waitKey(1) & 0xFF == ord("q"):
+    if cv2.waitKey(1) & 0xFF == ord("p"):
+        print(f'R:{r}, G: {g}, B: {b}')
+
+    elif cv2.waitKey(1) & 0xFF == ord("q"):
         break
 cap.release()
 cv2.destroyAllWindows()
