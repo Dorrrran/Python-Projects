@@ -10,7 +10,7 @@ cap = cv2.VideoCapture(1)
 
 #skapa ett rutnär för alla pixlar på skärmen, når pixlar genom ex screen[10][10]
 ret, frame = cap.read()
-h,w, _ = frame.shape
+h,w = frame.shape
 screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 
 
@@ -19,8 +19,7 @@ while True:
     x, y = pyautogui.position()
     ret, frame = cap.read()
     cv2.imshow("cam",frame)
-    #Antingen vald bild eller webcam
-    #cv2.imshow("Spectrum",img)
+    cv2.imshow("Spectrum",img)
     if cv2.waitKey(1) & 0xFF == ord("p"):
         while True:
             filename = os.path.join(path, f"{base_name}{file_index}{extension}")
@@ -30,28 +29,25 @@ while True:
                 cv2.imwrite(filename, frame)
                 print(f'Saved: {filename}')
                 break
-            
-
-    #ange en färg till varje pixel och sortera ut onödiga färger
     elif cv2.waitKey(1) & 0xFF == ord("v"):
-        color = img[y, x]
-        b, g, r = color
+        b, g, r = img[y, x]
 
-        h, w, _ = frame.shape
+        #ange en färg till varje pixel och sortera ut onödiga färger
+        h,w, _ = frame.shape
         for pxHeight in range(h):
             for pxWith in range(w):
-                b, g, r = frame[pxHeight, pxWith]
-                if (b > 20 and g > 20 and r > 20) and (b < 200 and g < 200 and r < 200):
-                    screen[pxHeight][pxWith] = [r, g, b]
-                else:
-                    screen[pxHeight][pxWith] = [0,0,0]
-        print("---------")     
-        print(f'Height : {h/2} Width : {w/2}')
-       #kollar om mitten pixeln lagrar samma som faktiska värdet
-        center_color = frame[h // 2, w // 2]
-        print(center_color)
-        print(f'B = {b}, G = {g}, R = {r}')
-        
+                b,g,r = frame[pxHeight,pxWith]
+                if (b>20 & g>20 & r>20) or (b>200 & g>200 & r>200):
+                    screen[h][w] = [r,g,b]
+        print(screen[h/2][w/2])
+        print("---------")
+
+        #kollar om mitten pixeln lagrar samma som faktiska värdet
+        color = frame[h/2, w/2]
+        print(color)
+
+                    
+        print(f'B1 = {b}, G1 = {g}, R1 = {r}')
     elif cv2.waitKey(1) & 0xFF == ord("c"):
         color = frame[y, x]
         b, g, r = color
