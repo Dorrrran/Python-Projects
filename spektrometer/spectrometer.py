@@ -36,18 +36,18 @@ while True:
         h,w, _ = frame.shape
         for pxHeight in range(h):
             for pxWith in range(w):
-                b,g,r = frame[pxHeight,pxWith]
-                if (b>20 & g>20 & r>20) or (b>200 & g>200 & r>200):
-                    screen[h][w] = [r,g,b]
-        print(screen[h/2][w/2])
-        print("---------")
-
-        #kollar om mitten pixeln lagrar samma som faktiska värdet
-        color = frame[h/2, w/2]
-        print(color)
-
-                    
-        print(f'B1 = {b}, G1 = {g}, R1 = {r}')
+                b, g, r = frame[pxHeight, pxWith]
+                if (b > 20 and g > 20 and r > 20) and (b < 200 and g < 200 and r < 200):
+                    screen[pxHeight][pxWith] = [r, g, b]
+                else:
+                    screen[pxHeight][pxWith] = [0,0,0]
+        print("---------")     
+        print(f'Height : {h/2} Width : {w/2}')
+       #kollar om mitten pixeln lagrar samma som faktiska värdet
+        center_color = frame[h // 2, w // 2]
+        print(center_color)
+        print(f'B = {b}, G = {g}, R = {r}')
+        
     elif cv2.waitKey(1) & 0xFF == ord("c"):
         color = frame[y, x]
         b, g, r = color
@@ -56,3 +56,19 @@ while True:
         break
 cap.release()
 cv2.destroyAllWindows()
+
+def rgb_to_wavelength(r, g, b, id):
+    if r > g and r > b:  # Dominant röd
+        return 620 + (750 - 620) * (r / 255)
+    elif g > r and g > b:  # Dominant grön
+        return 495 + (570 - 495) * (g / 255)
+    elif b > r and b > g:  # Dominant blå
+        return 450 + (495 - 450) * (b / 255)
+    elif r > g and g > b:  # Gul
+        return 570 + (590 - 570) * ((r + g) / (255 * 2))
+    elif g > b and b > r:  # Cyan
+        return 490 + (520 - 490) * ((g + b) / (255 * 2))
+    elif b > r and r > g:  # Magenta
+        return 380 + (450 - 380) * ((b + r) / (255 * 2))
+    else:
+        return None  # Okänd färg
