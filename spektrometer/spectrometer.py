@@ -45,17 +45,13 @@ while True:
                     screen[pxHeight][pxWith] = [r, g, b]
                 else:
                     screen[pxHeight][pxWith] = [0,0,0]
-        print("---------")     
-        print(f'Height : {h/2} Width : {w/2}')
-       #kollar om mitten pixeln lagrar samma som faktiska värdet
-        center_color = frame[h // 2, w // 2]
+
+        print("---------")
+        print(screen[h // 2][w // 2]) # ska vara samma som "center_color"
+
+        #kollar om mitten pixeln lagrar samma som faktiska värdet
+        center_color = frame[h // 2][w // 2]
         print(center_color)
-        print(f'B = {b}, G = {g}, R = {r}')
-        
-    elif cv2.waitKey(1) & 0xFF == ord("c"):
-        color = frame[y, x]
-        b, g, r = color
-        print(f'B = {b}, G = {g}, R = {r}')
     elif cv2.waitKey(1) & 0xFF == ord("q"):
         break
 cap.release()
