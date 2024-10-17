@@ -1,41 +1,20 @@
-from PIL import Image
+import cv2
 import numpy as np
+import os
+path = r"C:\Users\theos\SpectroImg\waka"
+cap = cv2.VideoCapture(0)
+while True:
+    ret, img = cap.read()
+    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    ret,gray = cv2.threshold(gray,127,255,0)
+    gray2 = gray.copy()
 
-# Function to estimate the wavelength from RGB values
-def rgb_to_wavelength(r, g, b):
-    # This is a very rough estimate based on RGB values
-    # The actual conversion depends on your specific needs
-    # For demonstration, we will just take a simple average
-    avg_rgb = (r + g + b) / 3
-    if avg_rgb == 0:
-        return "No light detected"
-    
-    # Simple heuristic to estimate wavelength based on average intensity
-    # This is not scientifically accurate, just for demonstration
-    wavelength = (r * 620 + g * 530 + b * 450) / avg_rgb  # Rough mapping
-    return wavelength
+    contours, hier = cv2.findContours(gray,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+    for cnt in contours:
+        if 5<cv2.contourArea(cnt)<5000:
+            (x,y,w,h) = cv2.boundingRect(cnt)
+            cv2.rectangle(gray2,(x,y),(x+w,y+h),0,-1)
 
-# Load the image
-def analyze_image(image_path):
-    image = Image.open(image_path)
-    image = image.convert('RGB')  # Ensure it's in RGB format
-    pixels = np.array(image)
-
-    # Get average RGB values
-    avg_color = pixels.mean(axis=(0, 1))  # Average across all pixels
-    r, g, b = avg_color
-
-    # Estimate wavelength
-    wavelength = rgb_to_wavelength(r, g, b)
-
-    return {
-        "average_rgb": (r, g, b),
-        "estimated_wavelength": wavelength
-    }
-
-# Example usage
-image_path = 'C:\Users\theos\OneDrive\Bilder\Camera_Roll\WIN_20241002_18_35_57_pro.jpg'  # Replace with your image file path
-result = analyze_image(image_path)
-
-print(f"Average RGB: {result['average_rgb']}")
-print(f"Estimated Wavelength: {result['estimated_wavelength']} nm")
+    cv2.imshow('IMG',gray2)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
