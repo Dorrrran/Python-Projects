@@ -99,7 +99,7 @@ while True:
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         #ange en färg till varje pixel och sortera ut onödiga färger
-        h,w,
+        h,w 
         for pxHeight in range(h):
             for pxWith in range(w):
                 b, g, r = frame[pxHeight, pxWith]
