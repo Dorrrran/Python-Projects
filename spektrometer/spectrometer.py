@@ -1,6 +1,7 @@
 import cv2
 import os
 import pyautogui, sys
+import matplotlib.pyplot as plt
 path = r"C:\Users\theos\SpectroImg"
 pathIn = r"C:\Users\theos\SpectroImg\red.jpg"
 base_name = 'spektrum'
@@ -14,29 +15,38 @@ färgerVågländ = [0, 0, 0, 0, 0, 0]
 ret, frame = cap.read()
 h,w, _ = frame.shape
 screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
-våg = [0, 0]
+Intensitet = [[[0, 0] for _ in range(w)] for _ in range(h)]
+Intensitet_värden = []
+Våglängd_värden = []
 
-def rgb_to_wavelength(r, g, b):
+def rgb_to_wavelength(r, g, b, h, w):
     #id till varje våglängd baserat på färg
     #kollar på varje färg samt dess intensitet och försöker aproximera till ett spektrum
     if r > g and r > b:  # Dominant röd
         färger[0] += 1
         färgerVågländ[0] += 620 + (750 - 620) * (r / 255)
+        #våglängd, intensitet
+        Intensitet[h][w] = (620 + (750 - 620) * (r / 255), r / 255)
     elif g > r and g > b:  # Dominant grön
         färger[1] += 1
         färgerVågländ[1] += 495 + (570 - 495) * (g / 255)
+        Intensitet[h][w] = (495 + (570 - 495) * (g / 255), g / 255)
     elif b > r and b > g:  # Dominant blå
         färger[2] += 1
         färgerVågländ[2] += 450 + (495 - 450) * (b / 255)
+        Intensitet[h][w] = (450 + (495 - 450) * (b / 255), b / 255)
     elif r > g and g > b:  # Gul
         färger[3] += 1
         färgerVågländ[3] += 570 + (590 - 570) * ((r + g) / (255 * 2))
+        Intensitet[h][w] = (570 + (590 - 570) * ((r + g) / (255 * 2)), ((r + g) / (255 * 2)))
     elif g > b and b > r:  # Cyan
         färger[4] += 1
         färgerVågländ[4] += 490 + (520 - 490) * ((g + b) / (255 * 2))
+        Intensitet[h][w] = (490 + (520 - 490) * ((g + b) / (255 * 2)), ((g + b) / (255 * 2)))
     elif b > r and r > g:  # Magenta
         färger[5] += 1
         färgerVågländ[5] += 380 + (450 - 380) * ((b + r) / (255 * 2))
+        Intensitet[h][w] = (380 + (450 - 380) * ((b + r) / (255 * 2)), ((b + r) / (255 * 2)))
     else:
         return None  # Okänd färg
 
@@ -69,7 +79,7 @@ while True:
                     screen[pxHeight][pxWith] = [r, g, b]
                     #aproximera våglängden
                     #kollar hur många lagrade variabler det finns i våg och lagrar nästkommande värde på nästa platts
-                    rgb_to_wavelength(r,g,b)
+                    rgb_to_wavelength(r,g,b,pxHeight,pxWith)
                 else:
                     screen[pxHeight][pxWith] = [0,0,0]
 
@@ -82,6 +92,23 @@ while True:
                 pr = färgerVågländ[n] // färger[n]
                 print("område ",n," ",pr, " nm i våglängd")
                 print("Antalet pixlar som befann sig i detta område: ", färger[n])
+
+
+        # Iterera över alla pixlar och samla intensitet och våglängd
+        for height in range(h):
+            for width in range(w):
+                intensity = Intensitet[height][width][0]  # Intensitet (y-värden)
+                wavelength = Intensitet[height][width][1]  # Våglängd (x-värden)
+                # Lägg till i listorna
+                Intensitet_värden.append(intensity)
+                Våglängd_värden.append(wavelength)
+
+        # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
+        plt.plot(Våglängd_värden, Intensitet_värden, 'o')  # 'o' för punkter
+        plt.xlabel("Wavelength (nm)")  # Sätt x-axelns etikett
+        plt.ylabel("Intensity")  # Sätt y-axelns etikett
+        plt.title("Intensity vs Wavelength")  # Titel på grafen
+        plt.show()  # Visa grafen
         färger = [0, 0, 0, 0, 0, 0]
         färgerVågländ = [0, 0, 0, 0, 0, 0]
 
