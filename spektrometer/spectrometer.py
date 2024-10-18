@@ -2,6 +2,7 @@ import cv2
 import os
 import pyautogui, sys
 import matplotlib.pyplot as plt
+
 path = r"C:\Users\theos\SpectroImg"
 pathIn = r"C:\Users\theos\SpectroImg\red.jpg"
 base_name = 'spektrum'
@@ -15,7 +16,7 @@ färgerVågländ = [0, 0, 0, 0, 0, 0]
 ret, frame = cap.read()
 h,w, _ = frame.shape
 screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
-Intensitet = [[[0, 0] for _ in range(w)] for _ in range(h)]
+Intensitet = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 Intensitet_värden = []
 Våglängd_värden = []
 
@@ -49,6 +50,37 @@ def rgb_to_wavelength(r, g, b, h, w):
         Intensitet[h][w] = (380 + (450 - 380) * ((b + r) / (255 * 2)), ((b + r) / (255 * 2)))
     else:
         return None  # Okänd färg
+    
+
+def LargestGroupOfPixels(frame):
+
+    # Convert to grayscale
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # Apply thresholding to get binary Ju lägre i position #2 destå lägre rgb värde som image (white pixels = clumps)
+    ret, binary = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
+
+    # Find contours in the binary image
+    contours, hier = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+    # If there are any contours found
+    if contours:
+        # Find the largest contour by area
+        largest_contour = max(contours, key=cv2.contourArea)
+
+        # Draw the bounding rectangle around the largest contour
+        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
+        cv2.rectangle(frame, (x_rect, y_rect), (x_rect + w_rect, y_rect + h_rect), (0, 255, 0), 2)  # Green rectangle
+
+        # Save the positions of the rectangle's corners
+        top_left_rect = (x_rect, y_rect)
+        bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
+        # Felsökning
+        print(f"Top-left corner: {top_left_rect}, Bottom-right corner: {bottom_right_rect}")
+
+    #cv2.imshow('Image with Rectangle', frame)
+    #cv2.imshow('gray', gray)
+    # Slut på felsökning
 
 while True:
     img = cv2.imread(pathIn)
@@ -69,9 +101,10 @@ while True:
         #nollställer färger
         färger = [0, 0, 0, 0, 0, 0]
         färgerVågländ = [0, 0, 0, 0, 0, 0]
-
+        top_left_rect, bottom_right_rect = LargestGroupOfPixels(frame)
+        # Fixa till så att den söker i rektangeln !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         #ange en färg till varje pixel och sortera ut onödiga färger
-        h,w, _ = frame.shape
+        h,w,
         for pxHeight in range(h):
             for pxWith in range(w):
                 b, g, r = frame[pxHeight, pxWith]
