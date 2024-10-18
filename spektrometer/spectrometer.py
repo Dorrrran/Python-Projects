@@ -58,10 +58,10 @@ def LargestGroupOfPixels(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # Apply thresholding to get binary Ju lägre i position #2 destå lägre rgb värde som image (white pixels = clumps)
-    ret, binary = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
+    binary = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
 
     # Find contours in the binary image
-    contours, hier = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    contours = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
     # If there are any contours found
     if contours:
@@ -102,9 +102,12 @@ while True:
         färger = [0, 0, 0, 0, 0, 0]
         färgerVågländ = [0, 0, 0, 0, 0, 0]
         top_left_rect, bottom_right_rect = LargestGroupOfPixels(frame)
-        # Fixa till så att den söker i rektangeln !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # Fixa till så att den söker i rektangeln !!!!!!!!!!!
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         #ange en färg till varje pixel och sortera ut onödiga färger
-        h,w,
+        h,w 
         for pxHeight in range(h):
             for pxWith in range(w):
                 b, g, r = frame[pxHeight, pxWith]
