@@ -17,6 +17,7 @@ färger = [0, 0, 0, 0, 0, 0]
 färgerVågländ = [0, 0, 0, 0, 0, 0]
 #skapa ett rutnär för alla pixlar på skärmen, når pixlar genom ex screen[10][10]
 ret, frame = cap.read()
+h,w,_ = frame.shape
 screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 Intensitet = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 Intensitet_värden = []
@@ -33,6 +34,7 @@ def extract_region_as_array(camera, top_left, bottom_right):
     :return: A NumPy array of the extracted region.
     """
     # Open the image
+    global cropped_image
     image = Image.open(camera).convert('RGB')
 
     # Crop the image to the specified region
@@ -40,7 +42,7 @@ def extract_region_as_array(camera, top_left, bottom_right):
 
     # Convert the cropped image to a NumPy array
     region_rbg_array = np.array(cropped_image)
-    return region_rbg_array, cropped_image
+    return region_rbg_array
 
 def rgb_to_wavelength(r, g, b, h, w):
     #id till varje våglängd baserat på färg
@@ -99,18 +101,12 @@ def LargestGroupOfPixels(frame):
         top_left_rect = (x_rect, y_rect)
         bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
         return top_left_rect, bottom_right_rect
-        # Felsökning
-    #cv2.imshow('Image with Rectangle', frame)
-    #cv2.imshow('gray', gray)
-    # Slut på felsökning
 
 while True:
     #img = cv2.imread(pathIn)
     x, y = pyautogui.position()
     ret, frame = cap.read()
     cv2.imshow("cam",frame)
-    cv2.imshow("cropped", cropped_image)
-    #cv2.imshow("Spectrum",img)
     if cv2.waitKey(1) & 0xFF == ord("p"):
         while True:
             filename = os.path.join(path, f"{base_name}{file_index}{extension}")
@@ -162,6 +158,5 @@ while True:
         
     elif cv2.waitKey(1) & 0xFF == ord("q"):
         break
-    print(region_rgb_array[:5, :5])
 cap.release()
 cv2.destroyAllWindows()
