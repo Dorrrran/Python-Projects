@@ -1,16 +1,62 @@
-import matplotlib.pyplot as plt
+import cv2
+import numpy as np
 
-fig, ax = plt.subplots()
+cap = cv2.VideoCapture(1)
+top_left_rect = None
+bottom_right_rect = None    
+def LargestGroupOfPixels(frame):
+        top_left_rect = None
+        bottom_right_rect = None    
 
-fruits = ['apple', 'blueberry', 'cherry','orange']
-counts = [40,100,30,55]
-bar_labels = ['red','blue','_red','orange',]
-bar_colors = ['tab:red', 'tab:blue', 'tab:red', 'tab:orange']
+        while True:
+        
+        # Show the current frame
+            cv2.imshow("Camera Feed", frame)
 
-ax.bar(fruits, counts, label = bar_labels, color = bar_colors)
+        # Convert the frame to grayscale
+            _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-ax.set_ylabel('fruit supply')
-ax.set_title('Fruit supply by kind and color')
-ax.legend(title='Fruit color')
+        # Apply thresholding to get a binary image
+            binary = cv2.threshold(_img_conv, 20, 255, cv2.THRESH_BINARY)[1]
 
-plt.show()
+        # Find contours in the binary image
+            contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+        # If there are any contours found
+            if contours:
+                print(f"Number of contours found: {len(contours)}")
+                for cnt in contours:
+                    area = cv2.contourArea(cnt)
+                    print(f"Contour area: {area}")
+
+                # Find the largest contour by area
+                largest_contour = max(contours, key=cv2.contourArea)
+
+                # Draw the bounding rectangle around the largest contour
+                x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
+                top_left_rect = (x_rect, y_rect)
+                bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
+
+                # Draw the rectangle on the frame
+                cv2.rectangle(frame, top_left_rect, bottom_right_rect, (0, 255, 0), 2)  # Green rectangle
+
+            # Display the frame with the rectangle
+            cv2.imshow("Frame with Rectangle", frame)
+
+            # Exit if 'q' is pressed
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+        cap.release()
+        cv2.destroyAllWindows()
+
+while True:
+    ret, frame = cap.read()
+
+    # Call the function to start processing the video feed
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()

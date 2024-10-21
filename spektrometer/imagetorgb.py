@@ -1,4 +1,3 @@
-from PIL import Image
 import numpy as np
 import os
 import pyautogui, sys
@@ -10,7 +9,7 @@ path = r"C:\Users\theos\SpectroImg"
 base_name = 'spektrum'
 extension = '.jpg'
 file_index = 1
-cropped_image = []
+cropped_image = None
 cap = cv2.VideoCapture(1)
 #skapa globara variabler för varje färg
 färger = [0, 0, 0, 0, 0, 0]
@@ -24,25 +23,10 @@ Intensitet_värden = []
 Våglängd_värden = []
 region_rgb_array = []
 
-def extract_region_as_array(camera, top_left, bottom_right):
-    """
-    Extracts a specific region from an image and converts it to a NumPy array.
-
-    :param image_path: Path to the image file.
-    :param top_left: Tuple (x1, y1) representing the top-left corner of the box.
-    :param bottom_right: Tuple (x2, y2) representing the bottom-right corner of the box.
-    :return: A NumPy array of the extracted region.
-    """
-    # Open the image
-    global cropped_image
-    image = Image.open(camera).convert('RGB')
-
-    # Crop the image to the specified region
-    cropped_image = image.crop((*top_left, *bottom_right))
-
-    # Convert the cropped image to a NumPy array
-    region_rbg_array = np.array(cropped_image)
-    return region_rbg_array
+def crop_image_to_rectangle(image, top_left, bottom_right):
+    cropped_frame = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+    cropped_image = np.array(cropped_frame)
+    return cropped_image
 
 def rgb_to_wavelength(r, g, b, h, w):
     #id till varje våglängd baserat på färg
@@ -77,34 +61,22 @@ def rgb_to_wavelength(r, g, b, h, w):
     
 
 def LargestGroupOfPixels(frame):
-
-    # Convert to grayscale
+    top_left_rect = None
+    bottom_right_rect = None    
     _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    # Apply thresholding to get binary Ju lägre i position #2 destå lägre rgb värde som image (white pixels = clumps)
-    binary, thresh = cv2.threshold(_img_conv, 100, 255, 0)
-    binary = np.array(binary, np.uint8)
-
-    # Find contours in the binary image
+    binary = cv2.threshold(_img_conv, 20, 255, cv2.THRESH_BINARY)[1]
     contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-
-    # If there are any contours found
     if contours:
-        # Find the largest contour by area
-        largest_contour = max(contours, key=cv2.contourArea)
-
-        # Draw the bounding rectangle around the largest contour
-        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
-        cv2.rectangle(frame, (x_rect, y_rect), (x_rect + w_rect, y_rect + h_rect), (0, 255, 0), 2)  # Green rectangle
-
-        # Save the positions of the rectangle's corners
-        top_left_rect = (x_rect, y_rect)
-        bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
-        return top_left_rect, bottom_right_rect
-
+        print(f"Number of contours found: {len(contours)}")
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            print(f"Contour area: {area}")
+            largest_contour = max(contours, key=cv2.contourArea)
+            x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
+            top_left_rect = (x_rect, y_rect)
+            bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
+    return top_left_rect, bottom_right_rect
 while True:
-    #img = cv2.imread(pathIn)
-    x, y = pyautogui.position()
     ret, frame = cap.read()
     cv2.imshow("cam",frame)
     if cv2.waitKey(1) & 0xFF == ord("p"):
@@ -121,13 +93,13 @@ while True:
         färger = [0, 0, 0, 0, 0, 0]
         färgerVågländ = [0, 0, 0, 0, 0, 0]
         top_left_rect, bottom_right_rect = LargestGroupOfPixels(frame)
+        print(f'top left {top_left_rect} bottom right {bottom_right_rect}')
         # Fixa till så att den söker i rektangeln
         #ange en färg till varje pixel och sortera ut onödiga färger
-        extract_region_as_array(frame, top_left_rect, bottom_right_rect)
-        h,w , _ = cropped_image.shape
+        cropped_image = crop_image_to_rectangle(frame, top_left_rect, bottom_right_rect)
+        h,w, _ = cropped_image.shape
         for pxHeight in range(h):
             for pxWidth in range(w):
-                region_rgb_array[:pxHeight,:pxWidth]
                 b, g, r = cropped_image[pxHeight, pxWidth]
                 if (b > 20 and g > 20 and r > 20) and (b < 200 and g < 200 and r < 200):
                     screen[pxHeight][pxWidth] = [r, g, b]
