@@ -3,9 +3,8 @@ import os
 import pyautogui, sys
 import matplotlib.pyplot as plt
 import numpy as np
-
+from fpdf import FPDF
 path = r"C:\Users\theos\SpectroImg"
-#pathIn = r"C:\Users\theos\SpectroImg\red.jpg"
 base_name = 'spektrum'
 extension = '.jpg'
 file_index = 1
@@ -20,6 +19,16 @@ screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 Intensitet = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 Intensitet_värden = []
 Våglängd_värden = []
+
+#Skapar den minsta rektangeln som innesluter alla pixlar med x mkt färg
+
+def crop_image_to_rectangle(image, top_left, bottom_right):
+    cropped_frame = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+    cropped_image = np.array(cropped_frame)
+    filename = os.path.join(r"C:\Users\theos\SpectroImg","Cropped.png" )
+    cv2.imwrite(filename , cropped_image,)
+    return cropped_image
+
 
 def rgb_to_wavelength(r, g, b, h, w):
     #id till varje våglängd baserat på färg
@@ -52,36 +61,70 @@ def rgb_to_wavelength(r, g, b, h, w):
     else:
         return None  # Okänd färg
     
+#from fpdf import FPDF
+#används genom - Create_pdf(output_pdf='my_spectrometer_results.pdf')
+#det är viktigt att spara grafen och bild på rätt plats innan
+#placera detta efter att grafen har skapats: plt.savefig(r"C:\Users\theos\SpectroGrapth")
+#spara cropped image bilden innan detta körs i: r"C:\Users\theos\CroppedSpectroImg"
+def Create_pdf(output_pdf):
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)  # Fixed spelling errors
+    pdf.add_page()
+
+    # Text
+    pdf.set_font("Arial", size=12)  # Ensure the font name is capitalized
+    pdf.multi_cell(0, 10, 'Spektrometer Resultat')  # Corrected the text to be more accurate
+    pdf.ln(10)  # Add space
+
+    # Add image
+    image = cv2.imread(r"C:\Users\theos\SpectroImg\cropped.png")  # Ensure the path is correct and points to an image file
+    if image is None:
+        print("Error: Image not found.")
+        return
+
+    # Convert BGR to RGB
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    
+    # Save image as PNG
+    temp_image_path = 'temp_image.png'
+    cv2.imwrite(temp_image_path, image)
+
+    # Add image to PDF
+    pdf.image(temp_image_path, x=10, y=30, w=100)  # Ensure the image path is correct
+    pdf.ln(85)
+
+    # Add graph
+    graph_path = r"C:\Users\theos\SpectroGraph.png"  # Ensure the path points to a valid image file (add .png extension)
+    pdf.image(graph_path, x=10, y=120, w=170)
+    pdf.ln(85)
+
+    # Add summary text
+    pdf.set_font("Arial", size=10)  # Ensure the font name is capitalized
+    sumText = ("Denna PDF presenterar resultat och bildanalys av spektrometern. "
+               "Den första bilden visar den tagna datan, och grafen under visar intensiteten som en funktion av våglängden.")
+    pdf.multi_cell(0, 10, sumText)
+
+    # Save the PDF
+    pdf.output("spectrometer", output_pdf)
+    print(f'PDF saved as {output_pdf}')
+
 
 def LargestGroupOfPixels(frame):
-
-    # Convert to grayscale
+    top_left_rect = None
+    bottom_right_rect = None    
     _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    # Apply thresholding to get binary Ju lägre i position #2 destå lägre rgb värde som image (white pixels = clumps)
-    binary, thresh = cv2.threshold(_img_conv, 100, 255, 0)
-    binary = np.array(binary, np.uint8)
-
-    # Find contours in the binary image
+    binary = cv2.threshold(_img_conv, 20, 255, cv2.THRESH_BINARY)[1]
     contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-
-    # If there are any contours found
     if contours:
-        # Find the largest contour by area
-        largest_contour = max(contours, key=cv2.contourArea)
-
-        # Draw the bounding rectangle around the largest contour
-        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
-        cv2.rectangle(frame, (x_rect, y_rect), (x_rect + w_rect, y_rect + h_rect), (0, 255, 0), 2)  # Green rectangle
-
-        # Save the positions of the rectangle's corners
-        top_left_rect = (x_rect, y_rect)
-        bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
-        return top_left_rect, bottom_right_rect
-        # Felsökning
-    #cv2.imshow('Image with Rectangle', frame)
-    #cv2.imshow('gray', gray)
-    # Slut på felsökning
+        print(f"Number of contours found: {len(contours)}")
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            print(f"Contour area: {area}")
+            largest_contour = max(contours, key=cv2.contourArea)
+            x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
+            top_left_rect = (x_rect, y_rect)
+            bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
+    return top_left_rect, bottom_right_rect
 
 while True:
     #img = cv2.imread(pathIn)
@@ -103,12 +146,9 @@ while True:
         färger = [0, 0, 0, 0, 0, 0]
         färgerVågländ = [0, 0, 0, 0, 0, 0]
         top_left_rect, bottom_right_rect = LargestGroupOfPixels(frame)
-        # Fixa till så att den söker i rektangeln !!!!!!!!!!!
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        cropped_image = crop_image_to_rectangle(frame, top_left_rect, bottom_right_rect)
         #ange en färg till varje pixel och sortera ut onödiga färger
-        h,w , _ = frame.shape
+        h,w , _ = cropped_image.shape
         for pxHeight in range(h):
             for pxWith in range(w):
                 b, g, r = frame[pxHeight, pxWith]
@@ -141,8 +181,10 @@ while True:
         plt.ylabel("Intensity")  # Sätt y-axelns etikett
         plt.title("Intensity vs Wavelength")  # Titel på grafen
         plt.show()  # Visa grafen
+        plt.savefig(r"C:\Users\theos\SpectroGraph.png")
         färger = [0, 0, 0, 0, 0, 0]
         färgerVågländ = [0, 0, 0, 0, 0, 0]
+        Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg")
 
         
     elif cv2.waitKey(1) & 0xFF == ord("q"):
