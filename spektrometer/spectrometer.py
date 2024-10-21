@@ -2,9 +2,10 @@ import cv2
 import os
 import pyautogui, sys
 import matplotlib.pyplot as plt
+import numpy as np
 
 path = r"C:\Users\theos\SpectroImg"
-pathIn = r"C:\Users\theos\SpectroImg\red.jpg"
+#pathIn = r"C:\Users\theos\SpectroImg\red.jpg"
 base_name = 'spektrum'
 extension = '.jpg'
 file_index = 1
@@ -55,13 +56,14 @@ def rgb_to_wavelength(r, g, b, h, w):
 def LargestGroupOfPixels(frame):
 
     # Convert to grayscale
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # Apply thresholding to get binary Ju lägre i position #2 destå lägre rgb värde som image (white pixels = clumps)
-    binary = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
+    binary, thresh = cv2.threshold(_img_conv, 100, 255, 0)
+    binary = np.array(binary, np.uint8)
 
     # Find contours in the binary image
-    contours = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
     # If there are any contours found
     if contours:
@@ -75,15 +77,14 @@ def LargestGroupOfPixels(frame):
         # Save the positions of the rectangle's corners
         top_left_rect = (x_rect, y_rect)
         bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
+        return top_left_rect, bottom_right_rect
         # Felsökning
-        print(f"Top-left corner: {top_left_rect}, Bottom-right corner: {bottom_right_rect}")
-
     #cv2.imshow('Image with Rectangle', frame)
     #cv2.imshow('gray', gray)
     # Slut på felsökning
 
 while True:
-    img = cv2.imread(pathIn)
+    #img = cv2.imread(pathIn)
     x, y = pyautogui.position()
     ret, frame = cap.read()
     cv2.imshow("cam",frame)
@@ -107,7 +108,7 @@ while True:
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         #ange en färg till varje pixel och sortera ut onödiga färger
-        h,w 
+        h,w , _ = frame.shape
         for pxHeight in range(h):
             for pxWith in range(w):
                 b, g, r = frame[pxHeight, pxWith]
@@ -119,22 +120,17 @@ while True:
                 else:
                     screen[pxHeight][pxWith] = [0,0,0]
 
-        print("---------")     
         center_color = frame[h // 2, w // 2]
-        print(center_color)
         for n in range(len(färger)):
 
             if färger[n] > 20000: #minimum pixlar som måste vara innan för ett våglängds intervall
                 pr = färgerVågländ[n] // färger[n]
-                print("område ",n," ",pr, " nm i våglängd")
-                print("Antalet pixlar som befann sig i detta område: ", färger[n])
-
 
         # Iterera över alla pixlar och samla intensitet och våglängd
         for height in range(h):
             for width in range(w):
-                intensity = Intensitet[height][width][0]  # Intensitet (y-värden)
-                wavelength = Intensitet[height][width][1]  # Våglängd (x-värden)
+                intensity = Intensitet[height][width][1]  # Intensitet (y-värden)
+                wavelength = Intensitet[height][width][0]  # Våglängd (x-värden)
                 # Lägg till i listorna
                 Intensitet_värden.append(intensity)
                 Våglängd_värden.append(wavelength)
@@ -149,10 +145,6 @@ while True:
         färgerVågländ = [0, 0, 0, 0, 0, 0]
 
         
-    elif cv2.waitKey(1) & 0xFF == ord("c"):
-        color = frame[y, x]
-        b, g, r = color
-        print(f'B = {b}, G = {g}, R = {r}')
     elif cv2.waitKey(1) & 0xFF == ord("q"):
         break
 cap.release()
