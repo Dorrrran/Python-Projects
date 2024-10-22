@@ -31,33 +31,24 @@ def crop_image_to_rectangle(image, top_left, bottom_right):
 def rgb_to_wavelength(r, g, b, h, w):
     #id till varje våglängd baserat på färg
     #kollar på varje färg samt dess intensitet och försöker aproximera till ett spektrum
+    luminosity = 0.0722 * b + 0.7152 * g + 0.2126 * r
+    print(luminosity)
     if r > g and r > b:  # Dominant röd
-        färger[0] += 1
-        färgerVågländ[0] += 620 + (750 - 620) * (r / 255)
         #våglängd, intensitet
-        Intensitet[h][w] = (620 + (750 - 620) * (r / 255), r / 255)
+        Intensitet[h][w] = (620 + (750 - 620 )* (r/255), luminosity) 
     elif g > r and g > b:  # Dominant grön
-        färger[1] += 1
-        färgerVågländ[1] += 495 + (570 - 495) * (g / 255)
-        Intensitet[h][w] = (495 + (570 - 495) * (g / 255), g / 255)
+        Intensitet[h][w] = (495 + (570 - 495) * (g / 255), luminosity)
     elif b > r and b > g:  # Dominant blå
-        färger[2] += 1
-        färgerVågländ[2] += 450 + (495 - 450) * (b / 255)
-        Intensitet[h][w] = (450 + (495 - 450) * (b / 255), b / 255)
+        Intensitet[h][w] = (450 + (495 - 450) * (b / 255), luminosity)
     elif r > g and g > b:  # Gul
-        färger[3] += 1
-        färgerVågländ[3] += 570 + (590 - 570) * ((r + g) / (255 * 2))
-        Intensitet[h][w] = (570 + (590 - 570) * ((r + g) / (255 * 2)), ((r + g) / (255 * 2)))
+        Intensitet[h][w] = (570 + (590 - 570) * ((r + g) / (255 * 2)), luminosity)
     elif g > b and b > r:  # Cyan
-        färger[4] += 1
-        färgerVågländ[4] += 490 + (520 - 490) * ((g + b) / (255 * 2))
-        Intensitet[h][w] = (490 + (520 - 490) * ((g + b) / (255 * 2)), ((g + b) / (255 * 2)))
+        Intensitet[h][w] = (490 + (520 - 490) * ((g + b) / (255 * 2)), luminosity)
     elif b > r and r > g:  # Magenta
-        färger[5] += 1
-        färgerVågländ[5] += 380 + (450 - 380) * ((b + r) / (255 * 2))
-        Intensitet[h][w] = (380 + (450 - 380) * ((b + r) / (255 * 2)), ((b + r) / (255 * 2)))
+        Intensitet[h][w] = (380 + (450 - 380) * ((b + r) / (255 * 2)), luminosity)
     else:
         return None  # Okänd färg
+    
     
 
 def LargestGroupOfPixels(frame):
