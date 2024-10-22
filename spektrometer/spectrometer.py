@@ -100,7 +100,7 @@ def Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg"):
     pdf.multi_cell(0, 10, sumText)
 
     # Save the PDF
-    pdf.output("spectrometer", output_pdf)
+    pdf.output(output_pdf)
     print(f'PDF saved as {output_pdf}')
 
 # Skapar en den minsta möjliga rektangel som täcker alla pixlar som är tillräckligt ljusa efter att bilden grayscalas
@@ -160,7 +160,7 @@ while True:
         färger = [0, 0, 0, 0, 0, 0]
         print(pixellost)
         färgerVågländ = [0, 0, 0, 0, 0, 0]
-        Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg")
+        Create_pdf(output_pdf=r"C:\Users\theos\SpectroImg\my_spectrometer_results.pdf")
 
         
     elif cv2.waitKey(1) & 0xFF == ord("q"):
