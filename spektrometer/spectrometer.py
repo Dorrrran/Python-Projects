@@ -25,8 +25,7 @@ Våglängd_värden = []
 def crop_image_to_rectangle(image, top_left, bottom_right):
     cropped_frame = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
     cropped_image = np.array(cropped_frame)
-    filename = os.path.join(r"C:\Users\theos\SpectroImg","Cropped.png" )
-    cv2.imwrite(filename , cropped_image,)
+    cv2.imwrite(r"C:\Users\theos\SpectroImg\cropped.png" , cropped_image,)
     return cropped_image
 
 
@@ -66,14 +65,14 @@ def rgb_to_wavelength(r, g, b, h, w):
 #det är viktigt att spara grafen och bild på rätt plats innan
 #placera detta efter att grafen har skapats: plt.savefig(r"C:\Users\theos\SpectroGrapth")
 #spara cropped image bilden innan detta körs i: r"C:\Users\theos\CroppedSpectroImg"
-def Create_pdf(output_pdf):
+def Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg"):
     pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=15)  # Fixed spelling errors
+    pdf.set_auto_page_break(auto=True, margin=15) 
     pdf.add_page()
 
     # Text
-    pdf.set_font("Arial", size=12)  # Ensure the font name is capitalized
-    pdf.multi_cell(0, 10, 'Spektrometer Resultat')  # Corrected the text to be more accurate
+    pdf.set_font("Arial", size=12) 
+    pdf.multi_cell(0, 10, 'Spektrometer Resultat') 
     pdf.ln(10)  # Add space
 
     # Add image
@@ -94,7 +93,7 @@ def Create_pdf(output_pdf):
     pdf.ln(85)
 
     # Add graph
-    graph_path = r"C:\Users\theos\SpectroGraph.png"  # Ensure the path points to a valid image file (add .png extension)
+    graph_path = r"C:\Users\theos\SpectroImg\SpectroGraph.png"  # Ensure the path points to a valid image file (add .png extension)
     pdf.image(graph_path, x=10, y=120, w=170)
     pdf.ln(85)
 
@@ -108,40 +107,25 @@ def Create_pdf(output_pdf):
     pdf.output("spectrometer", output_pdf)
     print(f'PDF saved as {output_pdf}')
 
+# Skapar en den minsta möjliga rektangel som täcker alla pixlar som är tillräckligt ljusa efter att bilden grayscalas
 
 def LargestGroupOfPixels(frame):
     top_left_rect = None
     bottom_right_rect = None    
     _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    binary = cv2.threshold(_img_conv, 20, 255, cv2.THRESH_BINARY)[1]
+    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
     contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     if contours:
-        print(f"Number of contours found: {len(contours)}")
-        for cnt in contours:
-            area = cv2.contourArea(cnt)
-            print(f"Contour area: {area}")
-            largest_contour = max(contours, key=cv2.contourArea)
-            x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
-            top_left_rect = (x_rect, y_rect)
-            bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
+        largest_contour = max(contours, key=cv2.contourArea)
+        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
+        top_left_rect = (x_rect, y_rect)
+        bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
     return top_left_rect, bottom_right_rect
 
 while True:
-    #img = cv2.imread(pathIn)
-    x, y = pyautogui.position()
     ret, frame = cap.read()
     cv2.imshow("cam",frame)
-    #cv2.imshow("Spectrum",img)
-    if cv2.waitKey(1) & 0xFF == ord("p"):
-        while True:
-            filename = os.path.join(path, f"{base_name}{file_index}{extension}")
-            if os.path.exists(filename):
-                file_index += 1
-            else:
-                cv2.imwrite(filename, frame)
-                print(f'Saved: {filename}')
-                break
-    elif cv2.waitKey(1) & 0xFF == ord("v"):
+    if cv2.waitKey(1) & 0xFF == ord("v"):
         #nollställer färger
         färger = [0, 0, 0, 0, 0, 0]
         färgerVågländ = [0, 0, 0, 0, 0, 0]
@@ -152,19 +136,13 @@ while True:
         for pxHeight in range(h):
             for pxWith in range(w):
                 b, g, r = frame[pxHeight, pxWith]
-                if (b > 20 and g > 20 and r > 20) and (b < 200 and g < 200 and r < 200):
+                if (b > 10 and g > 10 and r > 10) and (b < 200 and g < 200 and r < 200):
                     screen[pxHeight][pxWith] = [r, g, b]
                     #aproximera våglängden
                     #kollar hur många lagrade variabler det finns i våg och lagrar nästkommande värde på nästa platts
                     rgb_to_wavelength(r,g,b,pxHeight,pxWith)
                 else:
                     screen[pxHeight][pxWith] = [0,0,0]
-
-        center_color = frame[h // 2, w // 2]
-        for n in range(len(färger)):
-
-            if färger[n] > 20000: #minimum pixlar som måste vara innan för ett våglängds intervall
-                pr = färgerVågländ[n] // färger[n]
 
         # Iterera över alla pixlar och samla intensitet och våglängd
         for height in range(h):
@@ -176,12 +154,13 @@ while True:
                 Våglängd_värden.append(wavelength)
 
         # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
+        plt.xlim(350, 800)
         plt.plot(Våglängd_värden, Intensitet_värden, 'o')  # 'o' för punkter
         plt.xlabel("Wavelength (nm)")  # Sätt x-axelns etikett
         plt.ylabel("Intensity")  # Sätt y-axelns etikett
         plt.title("Intensity vs Wavelength")  # Titel på grafen
         plt.show()  # Visa grafen
-        plt.savefig(r"C:\Users\theos\SpectroGraph.png")
+        plt.savefig(r"C:\Users\theos\SpectroImg\SpectroGraph.png")
         färger = [0, 0, 0, 0, 0, 0]
         färgerVågländ = [0, 0, 0, 0, 0, 0]
         Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg")
