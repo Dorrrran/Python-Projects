@@ -16,42 +16,12 @@ screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 Intensitet_värden = []
 Våglängd_värden = []
+#inställningar för olika skalmningar m.m
+waveScale = 1 #ökar skillnaden mellan våglängder innom ett visst område
+spectBorder = 3 #minskar skalningen så att ljud försvinner
 
-#Kollar efter position med intressant ljus så man kan ignorera allt annat ljus senare vid mätnings tillfället 
-def CaliFrame(frame):
-    kal_top_left_rect = None
-    kal_bottom_right_rect = None    
-    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
-    contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    if contours:
-        kal_largest_contour = max(contours, key=cv2.contourArea)
-        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(kal_largest_contour)
-        kal_top_left_rect = (x_rect-20, y_rect-20)
-        kal_bottom_right_rect = (x_rect + w_rect+20, y_rect + h_rect+20)
-    return kal_top_left_rect, kal_bottom_right_rect
+#Skapar den minsta rektangeln som innesluter alla pixlar med x mkt färg
 
-#Skapar en ruta runt allt intressant ljus så vi kan analysera det vid senare tillfälle
-def CalibratedImage(image, kal_top_left, kal_bottom_right):
-    kal_cropped_frame = image[kal_top_left[1]:kal_bottom_right[1], kal_top_left[0]:kal_bottom_right[0]]
-    kal_cropped_image = np.array(kal_cropped_frame)
-    return kal_cropped_image
-
-#kollar efter största mängd pixlar och sedan skapar den minsta rektangeln som innesluter alla pixlar med x mkt färg
-def LargestGroupOfPixels(frame):
-    top_left_rect = None
-    bottom_right_rect = None    
-    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
-    contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    if contours:
-        largest_contour = max(contours, key=cv2.contourArea)
-        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
-        top_left_rect = (x_rect + 3, y_rect+ 3)
-        bottom_right_rect = (x_rect + w_rect - 3, y_rect + h_rect - 3)
-    return top_left_rect, bottom_right_rect
-
-#gör om den minsta rektangeln till en ny frame där vi sedan kan läsa av alla pixlar 
 def crop_image_to_rectangle(image, top_left, bottom_right):
     cropped_frame = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
     cropped_image = np.array(cropped_frame)
@@ -59,35 +29,32 @@ def crop_image_to_rectangle(image, top_left, bottom_right):
     return cropped_image
 
 #kollar på varje färg samt dess intensitet och försöker aproximera till ett spektrum
-def rgb_to_wavelength(r, g, b, h, w):
-    luminosity = (0.0722 * b + 0.7152 * g + 0.2126 * r)
-
-    """  
+def rgb_to_wavelength(r, g, b, gray, h, w):
+    #luminosity = (0.0722 * b + 0.7152 * g + 0.2126 * r)/100
+    luminosity = gray/255
+    
     print("------------------------------------")
     print(luminosity)
     print(r, g, b)
-    """
 
     if r > g and r > b:  # Dominant röd
         WaveInt[h][w] = (620 + (750 - 620 )* (r/255), luminosity) 
+        #våglängd, intensitet
+        WaveInt[h][w] = (620 + (750 - 620 )* (r*waveScale/255), luminosity) 
     elif g > r and g > b:  # Dominant grön
-        WaveInt[h][w] = (495 + (570 - 495) * (g / 255), luminosity)
+        WaveInt[h][w] = (495 + (570 - 495) * (g*waveScale / 255), luminosity)
     elif b > r and b > g:  # Dominant blå
-        WaveInt[h][w] = (450 + (495 - 450) * (b / 255), luminosity)
+        WaveInt[h][w] = (450 + (495 - 450) * (b *waveScale/ 255), luminosity)
     elif r > g and g > b:  # Gul
-        WaveInt[h][w] = (570 + (590 - 570) * ((r + g) / (255 * 2)), luminosity)
+        WaveInt[h][w] = (570 + (590 - 570) * ((r + g)*waveScale / (255 * 2)), luminosity)
     elif g > b and b > r:  # Cyan
-        WaveInt[h][w] = (490 + (520 - 490) * ((g + b) / (255 * 2)), luminosity)
+        WaveInt[h][w] = (490 + (520 - 490) * ((g + b)*waveScale / (255 * 2)), luminosity)
     elif b > r and r > g:  # Magenta
-        WaveInt[h][w] = (380 + (450 - 380) * ((b + r) / (255 * 2)), luminosity)
+        WaveInt[h][w] = (380 + (450 - 380) * ((b + r)*waveScale/ (255 * 2)), luminosity)
     else:
         return None  # Okänd färg
 
-
-#används genom - Create_pdf(output_pdf='my_spectrometer_results.pdf')
-#det är viktigt att spara grafen och bild på rätt plats innan
-#placera detta efter att grafen har skapats: plt.savefig(r"C:\Users\theos\SpectroGrapth")
-#spara cropped image bilden innan detta körs i: r"C:\Users\theos\CroppedSpectroImg"
+#skapa pdf med datainsammling
 def Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg"):
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15) 
@@ -113,12 +80,12 @@ def Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg"):
 
     # Add image to PDF
     pdf.image(temp_image_path, x=10, y=30, w=100)  # Ensure the image path is correct
-    pdf.ln(85)
+    pdf.ln(40)
 
     # Add graph
     graph_path = r"C:\Users\theos\SpectroImg\SpectroGraph.png"  # Ensure the path points to a valid image file (add .png extension)
     pdf.image(graph_path, x=10, y=120, w=170)
-    pdf.ln(85)
+    pdf.ln(150)
 
     # Add summary text
     pdf.set_font("Arial", size=10)
@@ -130,6 +97,39 @@ def Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg"):
     pdf.output(output_pdf)
     print(f'PDF saved as {output_pdf}')
 
+# Skapar en den minsta möjliga rektangel som täcker alla pixlar som är tillräckligt ljusa efter att bilden grayscalas
+def CalibratedImage(image, kal_top_left, kal_bottom_right):
+    kal_cropped_frame = image[kal_top_left[1]:kal_bottom_right[1], kal_top_left[0]:kal_bottom_right[0]]
+    kal_cropped_image = np.array(kal_cropped_frame)
+    return kal_cropped_image
+
+def CaliFrame(frame):
+    kal_top_left_rect = None
+    kal_bottom_right_rect = None    
+    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
+    contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        kal_largest_contour = max(contours, key=cv2.contourArea)
+        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(kal_largest_contour)
+        kal_top_left_rect = (x_rect-20, y_rect-20)
+        kal_bottom_right_rect = (x_rect + w_rect+20, y_rect + h_rect+20)
+    return kal_top_left_rect, kal_bottom_right_rect
+
+
+
+def LargestGroupOfPixels(frame):
+    top_left_rect = None
+    bottom_right_rect = None    
+    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
+    contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        largest_contour = max(contours, key=cv2.contourArea)
+        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
+        top_left_rect = (x_rect + spectBorder, y_rect+ spectBorder)
+        bottom_right_rect = (x_rect + w_rect - spectBorder, y_rect + h_rect - spectBorder)
+    return top_left_rect, bottom_right_rect
 
 while True:
     ret, frame = cap.read()
@@ -145,13 +145,14 @@ while True:
         #Reinitialize Intensitet for the cropped image
         h, w, _ = cropped_image.shape
         WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
-
+        #SvartVit version av bild
+        cropped_image_gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
         for pxHeight in range(h):
             for pxWidth in range(w):
                 b, g, r = cropped_image[pxHeight, pxWidth]
-                if (b > 3 and g > 3 and r > 3):
-                    #aproximera våglängden och intensitet
-                    rgb_to_wavelength(r,g,b,pxHeight,pxWidth)
+                gray = cropped_image_gray
+                #aproximera våglängden och intensitet
+                rgb_to_wavelength(r,g,b,gray,pxHeight,pxWidth)
         # Iterera över alla pixlar och samla intensitet och våglängd
         for height in range(h):
             for width in range(w):
