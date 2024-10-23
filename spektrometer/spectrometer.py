@@ -18,6 +18,9 @@ screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 Intensitet_värden = []
 Våglängd_värden = []
+#inställningar för olika skalmningar m.m
+waveScale = 1 #ökar skillnaden mellan våglängder innom ett visst område
+spectBorder = 3 #minskar skalningen så att ljud försvinner
 
 #Skapar den minsta rektangeln som innesluter alla pixlar med x mkt färg
 
@@ -39,25 +42,21 @@ def rgb_to_wavelength(r, g, b, h, w):
 
     if r > g and r > b:  # Dominant röd
         #våglängd, intensitet
-        WaveInt[h][w] = (620 + (750 - 620 )* (r/255), luminosity) 
+        WaveInt[h][w] = (620 + (750 - 620 )* (r*waveScale/255), luminosity) 
     elif g > r and g > b:  # Dominant grön
-        WaveInt[h][w] = (495 + (570 - 495) * (g / 255), luminosity)
+        WaveInt[h][w] = (495 + (570 - 495) * (g*waveScale / 255), luminosity)
     elif b > r and b > g:  # Dominant blå
-        WaveInt[h][w] = (450 + (495 - 450) * (b / 255), luminosity)
+        WaveInt[h][w] = (450 + (495 - 450) * (b *waveScale/ 255), luminosity)
     elif r > g and g > b:  # Gul
-        WaveInt[h][w] = (570 + (590 - 570) * ((r + g) / (255 * 2)), luminosity)
+        WaveInt[h][w] = (570 + (590 - 570) * ((r + g)*waveScale / (255 * 2)), luminosity)
     elif g > b and b > r:  # Cyan
-        WaveInt[h][w] = (490 + (520 - 490) * ((g + b) / (255 * 2)), luminosity)
+        WaveInt[h][w] = (490 + (520 - 490) * ((g + b)*waveScale / (255 * 2)), luminosity)
     elif b > r and r > g:  # Magenta
-        WaveInt[h][w] = (380 + (450 - 380) * ((b + r) / (255 * 2)), luminosity)
+        WaveInt[h][w] = (380 + (450 - 380) * ((b + r)*waveScale/ (255 * 2)), luminosity)
     else:
         return None  # Okänd färg
 
-
-#används genom - Create_pdf(output_pdf='my_spectrometer_results.pdf')
-#det är viktigt att spara grafen och bild på rätt plats innan
-#placera detta efter att grafen har skapats: plt.savefig(r"C:\Users\theos\SpectroGrapth")
-#spara cropped image bilden innan detta körs i: r"C:\Users\theos\CroppedSpectroImg"
+#skapa pdf med datainsammling
 def Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg"):
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15) 
@@ -130,8 +129,8 @@ def LargestGroupOfPixels(frame):
     if contours:
         largest_contour = max(contours, key=cv2.contourArea)
         x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
-        top_left_rect = (x_rect + 3, y_rect+ 3)
-        bottom_right_rect = (x_rect + w_rect - 3, y_rect + h_rect - 3)
+        top_left_rect = (x_rect + spectBorder, y_rect+ spectBorder)
+        bottom_right_rect = (x_rect + w_rect - spectBorder, y_rect + h_rect - spectBorder)
     return top_left_rect, bottom_right_rect
 
 while True:
