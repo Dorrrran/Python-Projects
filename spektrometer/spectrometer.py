@@ -1,6 +1,4 @@
 import cv2
-import os
-import pyautogui, sys
 import matplotlib.pyplot as plt
 import numpy as np
 from fpdf import FPDF
@@ -29,14 +27,16 @@ def crop_image_to_rectangle(image, top_left, bottom_right):
     cv2.imwrite(r"C:\Users\theos\SpectroImg\cropped.png" , cropped_image)
     return cropped_image
 
-
-def rgb_to_wavelength(r, g, b, h, w,pixellost):
-    #id till varje våglängd baserat på färg
-    #kollar på varje färg samt dess intensitet och försöker aproximera till ett spektrum
+#kollar på varje färg samt dess intensitet och försöker aproximera till ett spektrum
+def rgb_to_wavelength(r, g, b, h, w):
     luminosity = (0.0722 * b + 0.7152 * g + 0.2126 * r)/100
+
+    """  
     print("------------------------------------")
     print(luminosity)
     print(r, g, b)
+    """
+
     if r > g and r > b:  # Dominant röd
         #våglängd, intensitet
         WaveInt[h][w] = (620 + (750 - 620 )* (r/255), luminosity) 
@@ -51,12 +51,9 @@ def rgb_to_wavelength(r, g, b, h, w,pixellost):
     elif b > r and r > g:  # Magenta
         WaveInt[h][w] = (380 + (450 - 380) * ((b + r) / (255 * 2)), luminosity)
     else:
-        pixellost += 1 
-        
         return None  # Okänd färg
-    
-    
-#from fpdf import FPDF
+
+
 #används genom - Create_pdf(output_pdf='my_spectrometer_results.pdf')
 #det är viktigt att spara grafen och bild på rätt plats innan
 #placera detta efter att grafen har skapats: plt.savefig(r"C:\Users\theos\SpectroGrapth")
@@ -104,12 +101,12 @@ def Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg"):
     print(f'PDF saved as {output_pdf}')
 
 # Skapar en den minsta möjliga rektangel som täcker alla pixlar som är tillräckligt ljusa efter att bilden grayscalas
-def kal_crop_img(image, kal_top_left, kal_bottom_right):
+def CalibratedImage(image, kal_top_left, kal_bottom_right):
     kal_cropped_frame = image[kal_top_left[1]:kal_bottom_right[1], kal_top_left[0]:kal_bottom_right[0]]
     kal_cropped_image = np.array(kal_cropped_frame)
     return kal_cropped_image
 
-def Kalpixels(frame):
+def CaliFrame(frame):
     kal_top_left_rect = None
     kal_bottom_right_rect = None    
     _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -144,7 +141,7 @@ while True:
         #nollställer färger
         färger = [0, 0, 0, 0, 0, 0]
         färgerVågländ = [0, 0, 0, 0, 0, 0]
-        kalibrerad = kal_crop_img(frame,kal_top_left_rect, kal_bot_right_rect)
+        kalibrerad = CalibratedImage(frame,kal_top_left_rect, kal_bot_right_rect)
         top_left_rect, bottom_right_rect = LargestGroupOfPixels(kalibrerad)
         cropped_image = crop_image_to_rectangle(kalibrerad, top_left_rect, bottom_right_rect)
         #ange en färg till varje pixel och sortera ut onödiga färger
@@ -156,9 +153,8 @@ while True:
             for pxWidth in range(w):
                 b, g, r = cropped_image[pxHeight, pxWidth]
                 if (b > 3 and g > 3 and r > 3):
-                    #aproximera våglängden
-                    #kollar hur många lagrade variabler det finns i våg och lagrar nästkommande värde på nästa platts
-                    rgb_to_wavelength(r,g,b,pxHeight,pxWidth, pixellost)
+                    #aproximera våglängden och intensitet
+                    rgb_to_wavelength(r,g,b,pxHeight,pxWidth)
         # Iterera över alla pixlar och samla intensitet och våglängd
         for height in range(h):
             for width in range(w):
@@ -177,16 +173,18 @@ while True:
         plt.title("Intensity vs Wavelength")  # Titel på grafen
         plt.savefig(r"C:\Users\theos\SpectroImg\SpectroGraph.png") # sparar grafen
         plt.show()  # Visa grafen
-        Create_pdf(output_pdf = r"C:\Users\theos\SpectroImg\my_spectrometer_results.pdf")
+        Create_pdf(output_pdf = r"C:\Users\theos\SpectroImg\my_spectrometer_results.pdf") #sparar pdf
+
+        #Clearar alla arrayer
         WaveInt.clear()
         Intensitet_värden.clear()
         Våglängd_värden.clear()
 
-    elif cv2.waitKey(1) & 0xFF == ord('k'):
-        kal_top_left_rect, kal_bot_right_rect = Kalpixels(frame)
-        kalibrerad = kal_crop_img(frame,kal_top_left_rect, kal_bot_right_rect)
+    elif cv2.waitKey(1) & 0xFF == ord('k'):                      # Kalibrerar rutan så den kollar på rätt sak
+        kal_top_left_rect, kal_bot_right_rect = CaliFrame(frame)
+        kalibrerad = CalibratedImage(frame,kal_top_left_rect, kal_bot_right_rect)
         cv2.imshow('kalibreread', kalibrerad)
-    elif cv2.waitKey(1) & 0xFF == ord("q"):
+    elif cv2.waitKey(1) & 0xFF == ord("q"):                      # stänger ner programmet 
         break
 cap.release()
 cv2.destroyAllWindows()
