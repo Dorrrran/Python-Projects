@@ -2,25 +2,56 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from fpdf import FPDF
+import pandas as pd
+
 path = r"C:\Users\theos\SpectroImg"
 base_name = 'spektrum'
 extension = '.jpg'
 file_index = 1
-cap = cv2.VideoCapture(1)
-pixellost = 0
-#skapa globara variabler för varje färg
-färger = [0, 0, 0, 0, 0, 0]
-färgerVågländ = [0, 0, 0, 0, 0, 0]
-#skapa ett rutnär för alla pixlar på skärmen, når pixlar genom ex screen[10][10]
+cap = cv2.VideoCapture(1) #Bestämma vilken kamera som används
 ret, frame = cap.read()
 h,w, _ = frame.shape
+#skapa ett rutnär för alla pixlar på skärmen, når pixlar genom ex screen[10][10]
 screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 Intensitet_värden = []
 Våglängd_värden = []
 
-#Skapar den minsta rektangeln som innesluter alla pixlar med x mkt färg
+#Kollar efter position med intressant ljus så man kan ignorera allt annat ljus senare vid mätnings tillfället 
+def CaliFrame(frame):
+    kal_top_left_rect = None
+    kal_bottom_right_rect = None    
+    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
+    contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        kal_largest_contour = max(contours, key=cv2.contourArea)
+        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(kal_largest_contour)
+        kal_top_left_rect = (x_rect-20, y_rect-20)
+        kal_bottom_right_rect = (x_rect + w_rect+20, y_rect + h_rect+20)
+    return kal_top_left_rect, kal_bottom_right_rect
 
+#Skapar en ruta runt allt intressant ljus så vi kan analysera det vid senare tillfälle
+def CalibratedImage(image, kal_top_left, kal_bottom_right):
+    kal_cropped_frame = image[kal_top_left[1]:kal_bottom_right[1], kal_top_left[0]:kal_bottom_right[0]]
+    kal_cropped_image = np.array(kal_cropped_frame)
+    return kal_cropped_image
+
+#kollar efter största mängd pixlar och sedan skapar den minsta rektangeln som innesluter alla pixlar med x mkt färg
+def LargestGroupOfPixels(frame):
+    top_left_rect = None
+    bottom_right_rect = None    
+    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
+    contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        largest_contour = max(contours, key=cv2.contourArea)
+        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
+        top_left_rect = (x_rect + 3, y_rect+ 3)
+        bottom_right_rect = (x_rect + w_rect - 3, y_rect + h_rect - 3)
+    return top_left_rect, bottom_right_rect
+
+#gör om den minsta rektangeln till en ny frame där vi sedan kan läsa av alla pixlar 
 def crop_image_to_rectangle(image, top_left, bottom_right):
     cropped_frame = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
     cropped_image = np.array(cropped_frame)
@@ -29,7 +60,7 @@ def crop_image_to_rectangle(image, top_left, bottom_right):
 
 #kollar på varje färg samt dess intensitet och försöker aproximera till ett spektrum
 def rgb_to_wavelength(r, g, b, h, w):
-    luminosity = (0.0722 * b + 0.7152 * g + 0.2126 * r)/100
+    luminosity = (0.0722 * b + 0.7152 * g + 0.2126 * r)
 
     """  
     print("------------------------------------")
@@ -38,7 +69,6 @@ def rgb_to_wavelength(r, g, b, h, w):
     """
 
     if r > g and r > b:  # Dominant röd
-        #våglängd, intensitet
         WaveInt[h][w] = (620 + (750 - 620 )* (r/255), luminosity) 
     elif g > r and g > b:  # Dominant grön
         WaveInt[h][w] = (495 + (570 - 495) * (g / 255), luminosity)
@@ -91,7 +121,7 @@ def Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg"):
     pdf.ln(85)
 
     # Add summary text
-    pdf.set_font("Arial", size=10)  # Ensure the font name is capitalized
+    pdf.set_font("Arial", size=10)
     sumText = ("Denna PDF presenterar resultat och bildanalys av spektrometern. "
                "Den första bilden visar den tagna datan, och grafen under visar intensiteten som en funktion av våglängden.")
     pdf.multi_cell(0, 10, sumText)
@@ -100,39 +130,6 @@ def Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg"):
     pdf.output(output_pdf)
     print(f'PDF saved as {output_pdf}')
 
-# Skapar en den minsta möjliga rektangel som täcker alla pixlar som är tillräckligt ljusa efter att bilden grayscalas
-def CalibratedImage(image, kal_top_left, kal_bottom_right):
-    kal_cropped_frame = image[kal_top_left[1]:kal_bottom_right[1], kal_top_left[0]:kal_bottom_right[0]]
-    kal_cropped_image = np.array(kal_cropped_frame)
-    return kal_cropped_image
-
-def CaliFrame(frame):
-    kal_top_left_rect = None
-    kal_bottom_right_rect = None    
-    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
-    contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    if contours:
-        kal_largest_contour = max(contours, key=cv2.contourArea)
-        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(kal_largest_contour)
-        kal_top_left_rect = (x_rect-20, y_rect-20)
-        kal_bottom_right_rect = (x_rect + w_rect+20, y_rect + h_rect+20)
-    return kal_top_left_rect, kal_bottom_right_rect
-
-
-
-def LargestGroupOfPixels(frame):
-    top_left_rect = None
-    bottom_right_rect = None    
-    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
-    contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    if contours:
-        largest_contour = max(contours, key=cv2.contourArea)
-        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
-        top_left_rect = (x_rect + 3, y_rect+ 3)
-        bottom_right_rect = (x_rect + w_rect - 3, y_rect + h_rect - 3)
-    return top_left_rect, bottom_right_rect
 
 while True:
     ret, frame = cap.read()
@@ -144,8 +141,8 @@ while True:
         kalibrerad = CalibratedImage(frame,kal_top_left_rect, kal_bot_right_rect)
         top_left_rect, bottom_right_rect = LargestGroupOfPixels(kalibrerad)
         cropped_image = crop_image_to_rectangle(kalibrerad, top_left_rect, bottom_right_rect)
-        #ange en färg till varje pixel och sortera ut onödiga färger
-        # Reinitialize Intensitet for the cropped image
+        #Ange en färg till varje pixel och sortera ut onödiga färger
+        #Reinitialize Intensitet for the cropped image
         h, w, _ = cropped_image.shape
         WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 
@@ -166,13 +163,15 @@ while True:
 
         # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
         plt.xlim(350, 800)
-        plt.ylim(0,1)
+        plt.ylim(0,100)
         plt.plot(Våglängd_värden, Intensitet_värden, 'o')  # 'o' för punkter
         plt.xlabel("Wavelength (nm)")  # Sätt x-axelns etikett
         plt.ylabel("Intensity")  # Sätt y-axelns etikett
         plt.title("Intensity vs Wavelength")  # Titel på grafen
         plt.savefig(r"C:\Users\theos\SpectroImg\SpectroGraph.png") # sparar grafen
         plt.show()  # Visa grafen
+        np.savetxt(r"C:\Users\theos\SpectroImg\Intensitet.csv", Intensitet_värden, delimiter=',', fmt='%d')
+        np.savetxt(r"C:\Users\theos\SpectroImg\Våglängd.csv", Våglängd_värden, delimiter=',', fmt='%d')
         Create_pdf(output_pdf = r"C:\Users\theos\SpectroImg\my_spectrometer_results.pdf") #sparar pdf
 
         #Clearar alla arrayer
