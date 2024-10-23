@@ -31,14 +31,13 @@ def crop_image_to_rectangle(image, top_left, bottom_right):
     return cropped_image
 
 #kollar på varje färg samt dess intensitet och försöker aproximera till ett spektrum
-def rgb_to_wavelength(r, g, b, h, w):
-    luminosity = (0.0722 * b + 0.7152 * g + 0.2126 * r)/100
-
-    """  
+def rgb_to_wavelength(r, g, b, gray, h, w):
+    #luminosity = (0.0722 * b + 0.7152 * g + 0.2126 * r)/100
+    luminosity = gray/255
+    
     print("------------------------------------")
     print(luminosity)
     print(r, g, b)
-    """
 
     if r > g and r > b:  # Dominant röd
         #våglängd, intensitet
@@ -147,13 +146,14 @@ while True:
         # Reinitialize Intensitet for the cropped image
         h, w, _ = cropped_image.shape
         WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
-
+        #SvartVit version av bild
+        cropped_image_gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
         for pxHeight in range(h):
             for pxWidth in range(w):
                 b, g, r = cropped_image[pxHeight, pxWidth]
-                if (b > 3 and g > 3 and r > 3):
-                    #aproximera våglängden och intensitet
-                    rgb_to_wavelength(r,g,b,pxHeight,pxWidth)
+                gray = cropped_image_gray
+                #aproximera våglängden och intensitet
+                rgb_to_wavelength(r,g,b,gray,pxHeight,pxWidth)
         # Iterera över alla pixlar och samla intensitet och våglängd
         for height in range(h):
             for width in range(w):
