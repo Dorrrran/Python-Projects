@@ -82,12 +82,12 @@ def Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg"):
 
     # Add image to PDF
     pdf.image(temp_image_path, x=10, y=30, w=100)  # Ensure the image path is correct
-    pdf.ln(85)
+    pdf.ln(40)
 
     # Add graph
     graph_path = r"C:\Users\theos\SpectroImg\SpectroGraph.png"  # Ensure the path points to a valid image file (add .png extension)
     pdf.image(graph_path, x=10, y=120, w=170)
-    pdf.ln(85)
+    pdf.ln(150)
 
     # Add summary text
     pdf.set_font("Arial", size=10)  # Ensure the font name is capitalized
