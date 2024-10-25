@@ -35,7 +35,6 @@ def crop_image_to_rectangle(image, top_left, bottom_right):
 
 #kollar på varje färg samt dess intensitet och försöker aproximera till ett spektrum
 def rgb_to_wavelength(r, g, b, gray, h, w):
-    #luminosity = (0.0722 * b + 0.7152 * g + 0.2126 * r)/100
     luminosity = gray/255
     
     print("------------------------------------")
@@ -101,12 +100,16 @@ def Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg"):
     pdf.output(output_pdf)
     print(f'PDF saved as {output_pdf}')
 
+
 # Skapar en den minsta möjliga rektangel som täcker alla pixlar som är tillräckligt ljusa efter att bilden grayscalas
 def CalibratedImage(image, kal_top_left, kal_bottom_right):
     kal_cropped_frame = image[kal_top_left[1]:kal_bottom_right[1], kal_top_left[0]:kal_bottom_right[0]]
     kal_cropped_image = np.array(kal_cropped_frame)
     return kal_cropped_image
 
+
+# hittar största mängd pixlar och skickar ut 2 (top left och bot right) koordinater för den rektangeln som innesluter detta område
+# Denna kollar på en rektangel som är lite större än området och används så att kameran kan ignorerera annat ljus som möjligtvis skulle kunna hindra nästa steg ifrån att kolla på rätt del av bilden
 def CaliFrame(frame):
     kal_top_left_rect = None
     kal_bottom_right_rect = None    
@@ -121,7 +124,7 @@ def CaliFrame(frame):
     return kal_top_left_rect, kal_bottom_right_rect
 
 
-
+# hittar största mängd pixlar och skickar ut 2 (top left och bot right) koordinater för den rektangeln som innesluter detta område
 def LargestGroupOfPixels(frame):
     top_left_rect = None
     bottom_right_rect = None    
@@ -176,12 +179,11 @@ while True:
         max_row_length = max(len(row) for row in sanitized_WaveInt)
         for row in sanitized_WaveInt:
             while len(row) < max_row_length:
-                row.append([0, 0])  # Pad the row with default [0, 0] values if necessary
-# Now safely convert to NumPy array
-        WaveInt_np = np.array(sanitized_WaveInt)
+                row.append([0, 0])  # Lägger till [0,0] så alla rader blir lika långa i arrayen
+        WaveInt_np = np.array(sanitized_WaveInt) #Gör om WaveInt till 2 2d arrayer som sen kan sparas i excel fil 
         Våglängdarray = WaveInt_np[:,:,0]
         Intensitetarray = WaveInt_np[:,:,1]
-        VåglängdDF = pd.DataFrame(Våglängdarray)
+        VåglängdDF = pd.DataFrame(Våglängdarray) # sparar våglängd och intensitet i 2 separata excel document
         IntensitetDF = pd.DataFrame(Intensitetarray)
         VåglängdDF.to_excel(r"C:\Users\theos\SpectroImg\Våglängder.xlsx", index=False, header=False)
         IntensitetDF.to_excel(r"C:\Users\theos\SpectroImg\Intensitet.xlsx", index=False, header=False)
