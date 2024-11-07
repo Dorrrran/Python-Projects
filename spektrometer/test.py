@@ -211,15 +211,27 @@ while True:
             os.remove(intensity_path)
         VåglängdDF.to_excel(r"C:\Users\theos\SpectroImg\Våglängder.xlsx", index=False, header=False)
         IntensitetDF.to_excel(r"C:\Users\theos\SpectroImg\Intensitet.xlsx", index=False, header=False)
+        # Skapa en finare uppsättning våglängder mellan dina ursprungliga värden
+        wavelengths_fine = np.linspace(min(Våglängd_värden_intensitet), max(Våglängd_värden_intensitet), 500)
+
+        # Skapa en interpolationsfunktion baserad på dina ursprungliga data
+        interpolation_function = interp1d(Våglängd_värden_intensitet, Intensitet_värden_intensitet, kind='cubic')
+
+        # Använd interpolationsfunktionen för att få ut smidiga intensitetsvärden för de nya våglängderna
+        intensities_fine = interpolation_function(wavelengths_fine)
+
+        # Plotta den släta linjen
         plt.xlim(350, 800)
         plt.ylim(0, 1)
-        plt.plot(Våglängd_värden_intensitet, Intensitet_värden_intensitet, '-', markersize=4)  # 'o-' adds both dots and a line between them
+        plt.plot(wavelengths_fine, intensities_fine, '-', color="blue", label="Interpolerad kurva")  # Slät kurva
+        plt.scatter(Våglängd_värden_intensitet, Intensitet_värden_intensitet, color="red", label="Ursprungliga punkter")  # Ursprungsdata
         plt.xlabel("Wavelength (nm)")
         plt.ylabel("Intensity")
-        plt.title("Intensity vs Wavelength")
-        plt.savefig(r"C:\Users\theos\SpectroImg\SpectroGraph.png")  # Save the plot as a PNG image
+        plt.title("Intensity vs Wavelength (Smooth Curve)")
+        plt.legend()
+        plt.savefig(r"C:\Users\theos\SpectroImg\SpectroGraph.png")  # Spara grafen som PNG-bild
         plt.show()  
-        plt.clf()# Display the plot
+        plt.clf()  # Rensar grafen efter visning
         #Clearar alla arrayer
         WaveInt.clear()
         Intensitet_värden.clear()
