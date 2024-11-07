@@ -165,34 +165,34 @@ while True:
         # Iterera över alla pixlar och samla intensitet och våglängd
 
         # Dictionary för att spara högsta intensitet för varje våglängd
-    max_intensity_by_wavelength = {}
+        max_intensity_by_wavelength = {}
 
-    for height in range(h):
-      # Hantera rader
-      sanitized_row = []
-      for width in range(w):
-          intensity = WaveInt[height][width][1]  # Intensitet (y-värden)
-          wavelength = int(WaveInt[height][width][0])  # Våglängd (x-värden)
+        for height in range(h):
+        # Hantera rader
+            sanitized_row = []
+            for width in range(w):
+                intensity = WaveInt[height][width][1]  # Intensitet (y-värden)
+                wavelength = int(WaveInt[height][width][0])  # Våglängd (x-värden)
 
           # Kontrollera om denna våglängd redan finns i ordboken
-          if wavelength in max_intensity_by_wavelength:
+            if wavelength in max_intensity_by_wavelength:
               # Uppdatera om den nuvarande intensiteten är högre än den tidigare sparade
-              if intensity > max_intensity_by_wavelength[wavelength]:
-                  max_intensity_by_wavelength[wavelength] = intensity
-          else:
+                if intensity > max_intensity_by_wavelength[wavelength]:
+                    max_intensity_by_wavelength[wavelength] = intensity
+            else:
              # Lägg till våglängden om den inte finns i ordboken
-             max_intensity_by_wavelength[wavelength] = intensity
+                max_intensity_by_wavelength[wavelength] = intensity
 
       # Extrahera våglängd och intensitet för att bygga raden med högsta intensiteter
-      for wavelength, intensity in max_intensity_by_wavelength.items():
-          Våglängd_värden.append(wavelength)
-          Intensitet_värden.append(intensity)
-          sanitized_row.append([wavelength, intensity])
+        for wavelength, intensity in max_intensity_by_wavelength.items():
+            Våglängd_värden.append(wavelength)
+            Intensitet_värden.append(intensity)
+            sanitized_row.append([wavelength, intensity])
         # Lägg till rad för varje skapad rad med max intensiteter
-          sanitized_WaveInt.append(sanitized_row)
+            sanitized_WaveInt.append(sanitized_row)
 
     # Rensa ordboken för nästa rad
-    max_intensity_by_wavelength.clear()
+        max_intensity_by_wavelength.clear()
 
         # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
             
