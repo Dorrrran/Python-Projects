@@ -186,9 +186,14 @@ while True:
                 else:
                   # Lägg till våglängden om den inte finns i ordboken
                     max_intensity_by_wavelength[wavelength] = intensity
-        #Now extract the final lists of wavelengths and intensities with the maximum values across the whole image
-        Våglängd_värden_intensitet = np.array(list(max_intensity_by_wavelength.keys()))
-        Intensitet_värden_intensitet = np.array(list(max_intensity_by_wavelength.values()))
+
+        #sortera våglängder i stigande ordning
+        sorted_wavelengths = sorted(max_intensity_by_wavelength.items())
+
+        # Extrahera sorterade våglängder och deras respektive intensiteter
+        Våglängd_värden_intensitet = [wavelength for wavelength, _ in sorted_wavelengths]
+        Intensitet_värden_intensitet = [intensity for _, intensity in sorted_wavelengths]
+
         # Lägg till rad för varje skapad rad med max intensiteter
         sanitized_WaveInt.append(sanitized_row)
 
