@@ -172,18 +172,19 @@ while True:
         # Hantera rader
             max_intensity_by_wavelength = {}
             sanitized_row = []
+
             for width in range(w):
-                intensity = WaveInt[height][width][1]  # Intensitet (y-värden)
-                wavelength = int(WaveInt[height][width][0])  # Våglängd (x-värden)
+              intensity = WaveInt[height][width][1]  # Intensitet (y-värden)
+              wavelength = int(WaveInt[height][width][0])  # Våglängd (x-värden)
 
           # Kontrollera om denna våglängd redan finns i ordboken
-            if wavelength in max_intensity_by_wavelength:
-              # Uppdatera om den nuvarande intensiteten är högre än den tidigare sparade
-                if intensity > max_intensity_by_wavelength[wavelength]:
+              if wavelength in max_intensity_by_wavelength:
+                  #Uppdatera om den nuvarande intensiteten är högre än den tidigare sparade
+                  if intensity > max_intensity_by_wavelength[wavelength]:
                     max_intensity_by_wavelength[wavelength] = intensity
-            else:
-             # Lägg till våglängden om den inte finns i ordboken
-                max_intensity_by_wavelength[wavelength] = intensity
+              else:
+                  # Lägg till våglängden om den inte finns i ordboken
+                  max_intensity_by_wavelength[wavelength] = intensity
 
       # Extrahera våglängd och intensitet för att bygga raden med högsta intensiteter
         for wavelength, intensity in max_intensity_by_wavelength.items():
