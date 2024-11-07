@@ -180,13 +180,13 @@ while True:
                 Intensitet_värden.append(intensity)
                 sanitized_row.append([wavelength, intensity])
           # Kontrollera om denna våglängd redan finns i ordboken
-              if wavelength in max_intensity_by_wavelength:
+                if wavelength in max_intensity_by_wavelength:
                   #Uppdatera om den nuvarande intensiteten är högre än den tidigare sparade
-                  if intensity > max_intensity_by_wavelength[wavelength]:
-                    max_intensity_by_wavelength[wavelength] = intensity
-              else:
+                    if intensity > max_intensity_by_wavelength[wavelength]:
+                        max_intensity_by_wavelength[wavelength] = intensity
+                else:
                   # Lägg till våglängden om den inte finns i ordboken
-                  max_intensity_by_wavelength[wavelength] = intensity
+                    max_intensity_by_wavelength[wavelength] = intensity
 
       # Extrahera våglängd och intensitet för att bygga raden med högsta intensiteter
         for wavelength, intensity in max_intensity_by_wavelength.items():
