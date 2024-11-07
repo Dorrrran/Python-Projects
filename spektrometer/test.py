@@ -41,10 +41,9 @@ def crop_image_to_rectangle(image, top_left, bottom_right):
 def rgb_to_wavelength(r, g, b, gray, h, w):
     luminosity = gray/255
     r = int (r)
-    g= int(g)
+    g = int(g)
     b = int(b)
 
-    
     print("------------------------------------")
     print(luminosity)
     print(r, g, b)
