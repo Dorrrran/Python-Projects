@@ -20,6 +20,8 @@ ret, frame = cap.read()
 h,w, _ = frame.shape
 screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
+Intensitet_värden_intensitet = [] 
+Våglängd_värden_intensitet = [] 
 Intensitet_värden = []
 Våglängd_värden = []
 #inställningar för olika skalmningar m.m
@@ -165,10 +167,10 @@ while True:
         # Iterera över alla pixlar och samla intensitet och våglängd
 
         # Dictionary för att spara högsta intensitet för varje våglängd
-        max_intensity_by_wavelength = {}
 
         for height in range(h):
         # Hantera rader
+            max_intensity_by_wavelength = {}
             sanitized_row = []
             for width in range(w):
                 intensity = WaveInt[height][width][1]  # Intensitet (y-värden)
@@ -185,11 +187,11 @@ while True:
 
       # Extrahera våglängd och intensitet för att bygga raden med högsta intensiteter
         for wavelength, intensity in max_intensity_by_wavelength.items():
-            Våglängd_värden.append(wavelength)
-            Intensitet_värden.append(intensity)
+            Våglängd_värden_intensitet.append(wavelength)
+            Intensitet_värden_intensitet.append(intensity)
             sanitized_row.append([wavelength, intensity])
         # Lägg till rad för varje skapad rad med max intensiteter
-            sanitized_WaveInt.append(sanitized_row)
+        sanitized_WaveInt.append(sanitized_row)
 
     # Rensa ordboken för nästa rad
         max_intensity_by_wavelength.clear()
@@ -215,13 +217,13 @@ while True:
         plt.ylim(0, 1)
         
         # Plot dots and connect them with a line
-        plt.plot(Våglängd_värden, Intensitet_värden, 'o-', markersize=4)  # 'o-' adds both dots and a line between them
+        plt.plot(Våglängd_värden_intensitet, Intensitet_värden_intensitet, 'o-', markersize=4)  # 'o-' adds both dots and a line between them
         plt.xlabel("Wavelength (nm)")
         plt.ylabel("Intensity")
         plt.title("Intensity vs Wavelength")
         plt.savefig(r"C:\Users\theos\SpectroImg\SpectroGraph.png")  # Save the plot as a PNG image
-        plt.show()  # Display the plot
-        plt.clf()  # Clear the plot for the next iteration
+        plt.show()  
+        plt.clf()# Display the plot
         #Clearar alla arrayer
         WaveInt.clear()
         Intensitet_värden.clear()
