@@ -167,10 +167,9 @@ while True:
         # Iterera över alla pixlar och samla intensitet och våglängd
 
         # Dictionary för att spara högsta intensitet för varje våglängd
-
+        max_intensity_by_wavelength = {} 
         for height in range(h):
         # Hantera rader
-            max_intensity_by_wavelength = {}
             sanitized_row = []
 
             for width in range(w):
@@ -187,11 +186,10 @@ while True:
                 else:
                   # Lägg till våglängden om den inte finns i ordboken
                     max_intensity_by_wavelength[wavelength] = intensity
+        #Now extract the final lists of wavelengths and intensities with the maximum values across the whole image
+        Våglängd_värden_intensitet = list(max_intensity_by_wavelength.keys())
+        Intensitet_värden_intensitet = list(max_intensity_by_wavelength.values())
 
-      # Extrahera våglängd och intensitet för att bygga raden med högsta intensiteter
-        for wavelength, intensity in max_intensity_by_wavelength.items():
-            Våglängd_värden_intensitet.append(wavelength)
-            Intensitet_värden_intensitet.append(intensity)
         # Lägg till rad för varje skapad rad med max intensiteter
         sanitized_WaveInt.append(sanitized_row)
 
