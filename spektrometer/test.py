@@ -4,6 +4,7 @@ import numpy as np
 from fpdf import FPDF
 import pandas as pd
 import os
+from scipy.interpolate import make_interp_spline
 deltlaser = 0
 path = r"C:\Users\theos\SpectroImg"
 base_name = 'spektrum'
@@ -186,9 +187,8 @@ while True:
                   # Lägg till våglängden om den inte finns i ordboken
                     max_intensity_by_wavelength[wavelength] = intensity
         #Now extract the final lists of wavelengths and intensities with the maximum values across the whole image
-        Våglängd_värden_intensitet = list(max_intensity_by_wavelength.keys())
-        Intensitet_värden_intensitet = list(max_intensity_by_wavelength.values())
-
+        Våglängd_värden_intensitet = np.array(list(max_intensity_by_wavelength.keys()))
+        Intensitet_värden_intensitet = np.array(list(max_intensity_by_wavelength.values()))
         # Lägg till rad för varje skapad rad med max intensiteter
         sanitized_WaveInt.append(sanitized_row)
 
@@ -204,7 +204,6 @@ while True:
         VåglängdDF = pd.DataFrame(Våglängdarray) # sparar våglängd och intensitet i 2 separata excel document
         IntensitetDF = pd.DataFrame(Intensitetarray)
 
-
 # Remove files if they exist, then save the new versions
 
         if os.path.exists(wavelength_path) or os.path.exists(intensity_path):
@@ -214,9 +213,7 @@ while True:
         IntensitetDF.to_excel(r"C:\Users\theos\SpectroImg\Intensitet.xlsx", index=False, header=False)
         plt.xlim(350, 800)
         plt.ylim(0, 1)
-        
-        # Plot dots and connect them with a line
-        plt.plot(Våglängd_värden_intensitet, Intensitet_värden_intensitet, 'o-', markersize=4)  # 'o-' adds both dots and a line between them
+        plt.plot(Våglängd_värden_intensitet, Intensitet_värden_intensitet, '-', markersize=4)  # 'o-' adds both dots and a line between them
         plt.xlabel("Wavelength (nm)")
         plt.ylabel("Intensity")
         plt.title("Intensity vs Wavelength")
