@@ -1,77 +1,180 @@
-import numpy as np
+import cv2
 import matplotlib.pyplot as plt
-colormap = [[6, 1, 31],[12, 0, 40],[14, 0, 51], [16, 1, 60],
- [17, 1, 76], [23, 0, 90], [26, 1, 105], [28, 0, 119], [28, 0, 136], 
-[34, 0, 151],[36, 1, 165], [37, 0, 176], [37, 1, 187], [36, 0, 194],
-[37, 0, 202], [34, 0, 209], [31, 0, 217], [28, 1, 220], [25, 0, 224],
-[18, 1, 227], [16, 0, 229], [14, 0, 233], [10, 0, 237], [9, 0, 237],
-[7, 0, 240], [3, 0, 242], [0, 0, 244], [0, 0, 244], [2, 5, 244], 
-[1, 8, 244], [0, 13, 242], [0, 18, 242], [2, 22, 239],
-[0, 28, 236], [0, 33, 236], [0, 37, 232], [0, 44, 229], [2, 49, 227],
-[0, 55, 220], [0, 60, 218], [0, 66, 214], [1, 73, 209], [0, 77, 205],
-[0, 84, 200], [0, 91, 194], [0, 96, 193], [0, 101, 189], [0, 106, 182],
-[0, 111, 177], [1, 118, 172], [0, 120, 165], [0, 122, 159], 
-[0, 128, 153], [1, 131, 147], [1, 132, 140], [1, 135, 134], 
-[0, 140, 131], [0, 145, 126], [0, 148, 124], [0, 152, 122], 
-[0, 158, 118], [1, 162, 118], [1, 168, 116], [0, 172, 114],
-[0, 178, 113],[0, 182, 112], [0, 186, 111], [1, 188, 109], 
-[2, 191, 107], [0, 194, 107], [1, 195, 108], [0, 198, 101], 
-[1, 200, 99], [0, 204, 96], [1, 209, 97], [2, 211, 94], [1, 217, 90],
-[0, 220, 88], [0, 225, 81], [1, 228, 77], [1, 231, 71], [1, 232, 68], 
-[0, 230, 60], [0, 230, 52], [0, 230, 43], [0, 230, 33], [0, 228, 21],
-[0, 228, 11], [2, 229, 0], [16, 229, 0], [28, 229, 0], [40, 230, 0], 
-[56, 232, 0], [72, 232, 2], [84, 230, 1],
-[98, 231, 0],[111, 230, 0],[124, 230, 0], [137, 230, 1], [151, 228, 0],
-[162, 227, 0], [173, 229, 0], [186, 227, 0], [198, 224, 1], 
-[211, 226, 0], [221, 221, 0], [227, 216, 0], [230, 210, 1], 
-[237, 201, 1], [240, 193, 1],[242, 184, 0], [245, 173, 0], 
-[248, 165, 1], [250, 155, 0], [251, 145, 0], [252, 136, 1], 
-[254, 126, 1], [255, 115, 0], [255, 104, 3], [254, 95, 1], [255, 83, 1],
-[255, 72, 2], [255, 61, 0], [253, 49, 0], [255, 39, 2],
-[253, 28, 0], [255, 17, 4], [255, 8, 1], [254, 2, 1], [254, 0, 10],
-[255, 0, 14], [255, 0, 18], [251, 0, 24], [250, 0, 30], [250, 0, 30], 
-[248, 0, 35], [246, 0, 41], [246, 0, 41], [242, 0, 40], [242, 0, 40],
-[240, 0, 45], [237, 0, 46], [233, 0, 45], [230, 1, 44], [226, 0, 42], 
-[222, 0, 41], [218, 0, 39], [214, 0, 38], [206, 0, 36], [200, 1, 34], 
-[195, 0, 32], [189, 0, 30], [185, 0, 31], [177, 0, 28], [169, 0, 26],
-[162, 0, 24], [152, 0, 23],[144, 1, 21], [136, 1, 18], [128, 1, 20], 
-[121, 0, 19], [111, 0, 16], [104, 0, 14], [96, 0, 12], [88, 1, 10], 
-[83, 0, 12], [73, 0, 9], [67, 0, 9], [62, 1, 9], [57, 0, 7], [51, 0, 7],
-[46, 0, 5], [42, 0, 4], [39, 0, 5], [33, 1, 4], [30, 0, 4],[25, 0, 3], 
-[25, 0, 3], [22, 0, 2],[21, 0, 1], [16, 0, 0], [15, 1, 1], [14, 0, 0], 
-[12, 0, 0], [9, 0, 1], [9, 0, 1], [8, 0, 0]]
+import numpy as np
+from fpdf import FPDF
+import pandas as pd
+import os
 
+deltlaser = 0
+base_path = r"C:\Users\theos\SpectroImg"
+base_name = 'spektrum'
+extension = '.jpg'
+file_index = 1
+cap = cv2.VideoCapture(1)
+pixellost = 0
 
-def wave_to_rgb(wavlgth):
-    """Input : a float describing a wavelength in nanometer
-    Output : a numpy array giving the rgb values (between 0 and 1) 
-    associated with the colour percieved at this wavelength """
-    a = np.linspace(400,700,len(colormap))
-    colorindex = min(range(len(a)), key=lambda i: abs(a[i]-wavlgth))
-    col = colormap[colorindex]
-    return np.asarray(col)/255
+# skapa globara variabler för varje färg
+färger = [0, 0, 0, 0, 0, 0]
+färgerVågländ = [0, 0, 0, 0, 0, 0]
 
-#With a small example to show that this solution makes very convincing results : 
+# skapa ett rutnär för alla pixlar på skärmen
+sanitized_WaveInt = []
+ret, frame = cap.read()
+h, w, _ = frame.shape
+screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
+WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
+Intensitet_värden = []
+Våglängd_värden = []
 
-plt.figure(figsize=(13,5))
+# inställningar för olika skalmningar
+waveScale = 1
+spectBorder = 3
+wavelength_path = os.path.join(base_path, "Våglängder.xlsx")
+intensity_path = os.path.join(base_path, "Intensitet.xlsx")
 
-wavelgthlist = np.linspace(400,700,len(colormap))
+def crop_image_to_rectangle(image, top_left, bottom_right):
+    cropped_frame = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+    cropped_image = np.array(cropped_frame)
+    cv2.imwrite(os.path.join(base_path, "cropped.png"), cropped_image)
+    return cropped_image
 
+def rgb_to_wavelength(r, g, b, gray, h, w):
+    luminosity = gray / 255
+    r, g, b = int(r), int(g), int(b)
+    
+    if r > g and g > b:
+        WaveInt[h][w] = (570 + (590 - 570) * ((r + g) * waveScale / (255 * 2)), luminosity)
+    elif g > b and b > r:
+        WaveInt[h][w] = (490 + (520 - 490) * ((g + b) * waveScale / (255 * 2)), luminosity)
+    elif b > r and r > g:
+        WaveInt[h][w] = (380 + (450 - 380) * ((b + r) * waveScale / (255 * 2)), luminosity)
+    elif r > g and r > b:
+        WaveInt[h][w] = (620 + (750 - 620) * (r * waveScale / 255), luminosity)
+    elif g > r and g > b:
+        WaveInt[h][w] = (495 + (570 - 495) * (g * waveScale / 255), luminosity)
+    elif b > r and b > g:
+        WaveInt[h][w] = (450 + (495 - 450) * (b * waveScale / 255), luminosity)
+    else:
+        return None
 
-plt.plot(wavelgthlist, [wave_to_rgb(k)[0] for k in wavelgthlist],color = (1,0,0) ,linewidth = 2)
-plt.plot(wavelgthlist, [wave_to_rgb(k)[1] for k in wavelgthlist],color = (0,1,0) ,linewidth = 2)
-plt.plot(wavelgthlist, [wave_to_rgb(k)[2] for k in wavelgthlist],color = (0,0,1) ,linewidth = 2)
+def Create_pdf(output_pdf=os.path.join(base_path, "my_spectrometer_results.pdf")):
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
 
+    pdf.set_font("Arial", size=12)
+    pdf.multi_cell(0, 10, 'Spektrometer Resultat')
+    pdf.ln(10)
 
+    image = cv2.imread(os.path.join(base_path, "cropped.png"))
+    if image is None:
+        print("Error: Image not found.")
+        return
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    temp_image_path = os.path.join(base_path, 'temp_image.png')
+    cv2.imwrite(temp_image_path, image)
+    pdf.image(temp_image_path, x=10, y=30, w=100)
+    pdf.ln(40)
 
-plt.ylabel("Intensity of each pixel")
-plt.xlabel("Wavelength (nm)")
-plt.title("For each wavelength, pixel combination mimicking the perceived colour")
+    graph_path = os.path.join(base_path, "SpectroGraph.png")
+    pdf.image(graph_path, x=10, y=120, w=170)
+    pdf.ln(150)
 
-height = 1.05
+    pdf.set_font("Arial", size=10)
+    sumText = ("Denna PDF presenterar resultat och bildanalys av spektrometern. "
+               "Den första bilden visar den tagna datan, och grafen under visar intensiteten som en funktion av våglängden.")
+    pdf.multi_cell(0, 10, sumText)
+    pdf.output(output_pdf)
+    print(f'PDF saved as {output_pdf}')
 
-for line in range(len(wavelgthlist)):
-  plt.plot([wavelgthlist[line],wavelgthlist[line]],[height,height*1.05], color = wave_to_rgb(wavelgthlist[line]), linewidth = 3.8, alpha = 1)
+def CalibratedImage(image, kal_top_left, kal_bottom_right):
+    kal_cropped_frame = image[kal_top_left[1]:kal_bottom_right[1], kal_top_left[0]:kal_bottom_right[0]]
+    return np.array(kal_cropped_frame)
 
+def CaliFrame(frame):
+    kal_top_left_rect, kal_bottom_right_rect = None, None    
+    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
+    contours, _ = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        kal_largest_contour = max(contours, key=cv2.contourArea)
+        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(kal_largest_contour)
+        kal_top_left_rect = (x_rect - 20, y_rect - 20)
+        kal_bottom_right_rect = (x_rect + w_rect + 20, y_rect + h_rect + 20)
+    return kal_top_left_rect, kal_bottom_right_rect
 
-plt.show()
+def LargestGroupOfPixels(frame):
+    top_left_rect, bottom_right_rect = None, None
+    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
+    contours, _ = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        largest_contour = max(contours, key=cv2.contourArea)
+        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
+        top_left_rect = (x_rect + spectBorder, y_rect + spectBorder)
+        bottom_right_rect = (x_rect + w_rect - spectBorder, y_rect + h_rect - spectBorder)
+    return top_left_rect, bottom_right_rect
+
+while True:
+    ret, frame = cap.read()
+    cv2.imshow("cam", frame)
+    if cv2.waitKey(1) & 0xFF == ord("v"):
+        kalibrerad = CalibratedImage(frame, kal_top_left_rect, kal_bot_right_rect)
+        top_left_rect, bottom_right_rect = LargestGroupOfPixels(kalibrerad)
+        cropped_image = crop_image_to_rectangle(kalibrerad, top_left_rect, bottom_right_rect)
+
+        h, w, _ = cropped_image.shape
+        WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
+        cropped_image_gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+
+        for pxHeight in range(h):
+            for pxWidth in range(w):
+                b, g, r = cropped_image[pxHeight, pxWidth]
+                gray = cropped_image_gray[pxHeight, pxWidth]
+                rgb_to_wavelength(r, g, b, gray, pxHeight, pxWidth)
+
+        max_intensity_by_wavelength = {}
+
+        for height in range(h):
+            for width in range(w):
+                intensity = WaveInt[height][width][1]
+                wavelength = int(WaveInt[height][width][0])
+
+                if wavelength in max_intensity_by_wavelength:
+                    if intensity > max_intensity_by_wavelength[wavelength]:
+                        max_intensity_by_wavelength[wavelength] = intensity
+                else:
+                    max_intensity_by_wavelength[wavelength] = intensity
+
+        Våglängd_värden = list(max_intensity_by_wavelength.keys())
+        Intensitet_värden = list(max_intensity_by_wavelength.values())
+
+        VåglängdDF = pd.DataFrame(Våglängd_värden)
+        IntensitetDF = pd.DataFrame(Intensitet_värden)
+
+        if os.path.exists(wavelength_path):
+            os.remove(wavelength_path)
+        if os.path.exists(intensity_path):
+            os.remove(intensity_path)
+            
+        VåglängdDF.to_excel(wavelength_path, index=False, header=False)
+        IntensitetDF.to_excel(intensity_path, index=False, header=False)
+
+        plt.xlim(350, 800)
+        plt.ylim(0, 1)
+        plt.plot(Våglängd_värden, Intensitet_värden, 'o-')
+        plt.xlabel("Wavelength (nm)")
+        plt.ylabel("Intensity")
+        plt.title("Intensity vs Wavelength")
+        plt.savefig(os.path.join(base_path, "SpectroGraph.png"))
+        plt.show()
+        plt.clf()
+
+        Create_pdf()
+
+        WaveInt.clear()
+        Intensitet_värden.clear()
+        Våglängd_värden.clear()
+
+    elif cv2.waitKey(1) & 0xFF == ord('k'):
+        kal_top_left_rect, kal_bot_right_rect = CaliFrame(frame)
