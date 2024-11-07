@@ -175,7 +175,9 @@ while True:
             for width in range(w):
                 intensity = WaveInt[height][width][1]  # Intensitet (y-värden)
                 wavelength = int(WaveInt[height][width][0])  # Våglängd (x-värden)
-
+                Våglängd_värden.append(wavelength)
+                Intensitet_värden.append(intensity)
+                sanitized_row.append([wavelength, intensity])
           # Kontrollera om denna våglängd redan finns i ordboken
             if wavelength in max_intensity_by_wavelength:
               # Uppdatera om den nuvarande intensiteten är högre än den tidigare sparade
@@ -189,7 +191,6 @@ while True:
         for wavelength, intensity in max_intensity_by_wavelength.items():
             Våglängd_värden_intensitet.append(wavelength)
             Intensitet_värden_intensitet.append(intensity)
-            sanitized_row.append([wavelength, intensity])
         # Lägg till rad för varje skapad rad med max intensiteter
         sanitized_WaveInt.append(sanitized_row)
 
