@@ -4,6 +4,7 @@ import numpy as np
 from fpdf import FPDF
 import pandas as pd
 import os
+from scipy.interpolate import make_interp_spline
 deltlaser = 0
 path = r"C:\Users\theos\SpectroImg"
 base_name = 'spektrum'
@@ -20,6 +21,8 @@ ret, frame = cap.read()
 h,w, _ = frame.shape
 screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
+Intensitet_värden_intensitet = [] 
+Våglängd_värden_intensitet = [] 
 Intensitet_värden = []
 Våglängd_värden = []
 #inställningar för olika skalmningar m.m
@@ -39,13 +42,8 @@ def crop_image_to_rectangle(image, top_left, bottom_right):
 def rgb_to_wavelength(r, g, b, gray, h, w):
     luminosity = gray/255
     r = int (r)
-    g= int(g)
+    g = int(g)
     b = int(b)
-
-    
-    print("------------------------------------")
-    print(luminosity)
-    print(r, g, b)
 
     if r > g and g > b:  # Gul
         WaveInt[h][w] = (570 + (590 - 570) * ((r + g)*waveScale / (255 * 2)), luminosity)
@@ -164,34 +162,49 @@ while True:
                 rgb_to_wavelength(r,g,b,gray,pxHeight,pxWidth)
         # Iterera över alla pixlar och samla intensitet och våglängd
 
+        # Dictionary för att spara högsta intensitet för varje våglängd
+        max_intensity_by_wavelength = {} 
         for height in range(h):
-
-            #Hantera rader
+        # Hantera rader
             sanitized_row = []
-            for width in range(w):
-                intensity = WaveInt[height][width][1] # Intensitet (y-värden)
-                wavelength = int(WaveInt[height][width][0])  # Våglängd (x-värden)
-                # Lägg till i listorna
-                Intensitet_värden.append(intensity)
-                Våglängd_värden.append(wavelength)
 
+            for width in range(w):
+                intensity = WaveInt[height][width][1]  # Intensitet (y-värden)
+                wavelength = int(WaveInt[height][width][0])  # Våglängd (x-värden)
                 sanitized_row.append([wavelength, intensity])
-            
-            #Lägg till rad för varje skapad rad
-            sanitized_WaveInt.append(sanitized_row)
+          # Kontrollera om denna våglängd redan finns i ordboken
+                if wavelength in max_intensity_by_wavelength:
+                  #Uppdatera om den nuvarande intensiteten är högre än den tidigare sparade
+                    if intensity > max_intensity_by_wavelength[wavelength]:
+                        max_intensity_by_wavelength[wavelength] = intensity
+                else:
+                  # Lägg till våglängden om den inte finns i ordboken
+                    max_intensity_by_wavelength[wavelength] = intensity
+            sanitized_WaveInt.append(sanitized_row) #sortera våglängder i stigande ordning
+        sorted_wavelengths = sorted(max_intensity_by_wavelength.items())
+
+        # Extrahera sorterade våglängder och deras respektive intensiteter
+        Våglängd_värden_intensitet = [wavelength for wavelength, _ in sorted_wavelengths]
+        Intensitet_värden_intensitet = [intensity for _, intensity in sorted_wavelengths]
+        # Lägg till rad för varje skapad rad med max intensiteter
+
+    # Rensa ordboken för nästa rad
+        max_intensity_by_wavelength.clear()
 
         # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
             
         
-        WaveInt_np = np.array(sanitized_WaveInt, dtype = float) #Gör om WaveInt till 2 2d arrayer som sen kan sparas i excel fil 
-        print(WaveInt_np)
-        print(WaveInt_np.dtype)
-        print(WaveInt_np.shape)
+        WaveInt_np = np.array(sanitized_WaveInt) #Gör om WaveInt till 2 2d arrayer som sen kan sparas i excel fil 
+        for row in WaveInt:
+            for col in row:
+                if col[0] == 0 or col[1] == 0:
+                    print("Unexpected zero at:", col)
         Våglängdarray = WaveInt_np[:,:,0]
         Intensitetarray = WaveInt_np[:,:,1]
         VåglängdDF = pd.DataFrame(Våglängdarray) # sparar våglängd och intensitet i 2 separata excel document
         IntensitetDF = pd.DataFrame(Intensitetarray)
-
+        print(len(sanitized_WaveInt))          # Should be `h`
+        print(all(len(row) == w for row in sanitized_WaveInt))
 
 # Remove files if they exist, then save the new versions
 
@@ -201,15 +214,14 @@ while True:
         VåglängdDF.to_excel(r"C:\Users\theos\SpectroImg\Våglängder.xlsx", index=False, header=False)
         IntensitetDF.to_excel(r"C:\Users\theos\SpectroImg\Intensitet.xlsx", index=False, header=False)
         plt.xlim(350, 800)
-        plt.ylim(0,1)
-        plt.plot(Våglängd_värden, Intensitet_värden, 'o')  # 'o' för punkter
-        plt.xlabel("Wavelength (nm)")  # Sätt x-axelns etikett
-        plt.ylabel("Intensity")  # Sätt y-axelns etikett
-        plt.title("Intensity vs Wavelength")  # Titel på grafen
-        plt.savefig(r"C:\Users\theos\SpectroImg\SpectroGraph.png") # sparar grafen
-        plt.show()  # Visa grafen
-        Create_pdf(output_pdf = r"C:\Users\theos\SpectroImg\my_spectrometer_results.pdf") #sparar pdf
-
+        plt.ylim(0, 1)
+        plt.plot(Våglängd_värden_intensitet, Intensitet_värden_intensitet, '-', markersize=4)  # 'o-' adds both dots and a line between them
+        plt.xlabel("Wavelength (nm)")
+        plt.ylabel("Intensity")
+        plt.title("Intensity vs Wavelength")
+        plt.savefig(r"C:\Users\theos\SpectroImg\SpectroGraph.png")  # Save the plot as a PNG image
+        plt.show()  
+        plt.clf()# Display the plot
         #Clearar alla arrayer
         WaveInt.clear()
         Intensitet_värden.clear()

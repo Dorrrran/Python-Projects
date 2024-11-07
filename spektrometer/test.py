@@ -45,10 +45,6 @@ def rgb_to_wavelength(r, g, b, gray, h, w):
     g = int(g)
     b = int(b)
 
-    print("------------------------------------")
-    print(luminosity)
-    print(r, g, b)
-
     if r > g and g > b:  # Gul
         WaveInt[h][w] = (570 + (590 - 570) * ((r + g)*waveScale / (255 * 2)), luminosity)
     elif g > b and b > r:  # Cyan
@@ -199,6 +195,10 @@ while True:
             
         
         WaveInt_np = np.array(sanitized_WaveInt) #Gör om WaveInt till 2 2d arrayer som sen kan sparas i excel fil 
+        for row in WaveInt:
+            for col in row:
+                if col[0] == 0 or col[1] == 0:
+                    print("Unexpected zero at:", col)
         Våglängdarray = WaveInt_np[:,:,0]
         Intensitetarray = WaveInt_np[:,:,1]
         VåglängdDF = pd.DataFrame(Våglängdarray) # sparar våglängd och intensitet i 2 separata excel document
