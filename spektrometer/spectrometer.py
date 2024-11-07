@@ -172,7 +172,7 @@ while True:
                 intensity = WaveInt[height][width][1] # Intensitet (y-värden)
                 wavelength = int(WaveInt[height][width][0])  # Våglängd (x-värden)
                 # Lägg till i listorna
-
+                
                 Intensitet_värden.append(intensity)
                 Våglängd_värden.append(wavelength)
 
