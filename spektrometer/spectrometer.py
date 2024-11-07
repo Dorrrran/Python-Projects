@@ -139,8 +139,8 @@ def LargestGroupOfPixels(frame):
     if contours:
         largest_contour = max(contours, key=cv2.contourArea)
         x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
-        top_left_rect = (x_rect + spectBorder, y_rect+ spectBorder)
-        bottom_right_rect = (x_rect + w_rect - spectBorder, y_rect + h_rect - spectBorder)
+        top_left_rect = (x_rect, y_rect+ spectBorder)
+        bottom_right_rect = (x_rect + w_rect, y_rect + h_rect - spectBorder)
     return top_left_rect, bottom_right_rect
 
 while True:
@@ -172,7 +172,8 @@ while True:
                 intensity = WaveInt[height][width][1] # Intensitet (y-värden)
                 wavelength = int(WaveInt[height][width][0])  # Våglängd (x-värden)
                 # Lägg till i listorna
-
+                print(intensity)
+                print(wavelength)
                 Intensitet_värden.append(intensity)
                 Våglängd_värden.append(wavelength)
 
@@ -183,10 +184,6 @@ while True:
 
         # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
             
-        max_row_length = max(len(row) for row in sanitized_WaveInt)
-        for row in sanitized_WaveInt:
-            while len(row) < max_row_length:
-                row.append([0, 0])  # Lägger till [0,0] så alla rader blir lika långa i arrayen
         
         WaveInt_np = np.array(sanitized_WaveInt) #Gör om WaveInt till 2 2d arrayer som sen kan sparas i excel fil 
         Våglängdarray = WaveInt_np[:,:,0]
