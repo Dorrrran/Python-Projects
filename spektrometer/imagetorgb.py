@@ -1,189 +1,73 @@
-import cv2
-import matplotlib.pyplot as plt
 import numpy as np
-from fpdf import FPDF
-import pandas as pd
+import matplotlib.pyplot as plt
+colormap = [[6, 1, 31],[12, 0, 40],[14, 0, 51], [16, 1, 60],
+ [17, 1, 76], [23, 0, 90], [26, 1, 105], [28, 0, 119], [28, 0, 136], 
+[34, 0, 151],[36, 1, 165], [37, 0, 176], [37, 1, 187], [36, 0, 194],
+[37, 0, 202], [34, 0, 209], [31, 0, 217], [28, 1, 220], [25, 0, 224],
+[18, 1, 227], [16, 0, 229], [14, 0, 233], [10, 0, 237], [9, 0, 237],
+[7, 0, 240], [3, 0, 242], [0, 0, 244], [0, 0, 244], [2, 5, 244], 
+[1, 8, 244], [0, 13, 242], [0, 18, 242], [2, 22, 239],
+[0, 28, 236], [0, 33, 236], [0, 37, 232], [0, 44, 229], [2, 49, 227],
+[0, 55, 220], [0, 60, 218], [0, 66, 214], [1, 73, 209], [0, 77, 205],
+[0, 84, 200], [0, 91, 194], [0, 96, 193], [0, 101, 189], [0, 106, 182],
+[0, 111, 177], [1, 118, 172], [0, 120, 165], [0, 122, 159], 
+[0, 128, 153], [1, 131, 147], [1, 132, 140], [1, 135, 134], 
+[0, 140, 131], [0, 145, 126], [0, 148, 124], [0, 152, 122], 
+[0, 158, 118], [1, 162, 118], [1, 168, 116], [0, 172, 114],
+[0, 178, 113],[0, 182, 112], [0, 186, 111], [1, 188, 109], 
+[2, 191, 107], [0, 194, 107], [1, 195, 108], [0, 198, 101], 
+[1, 200, 99], [0, 204, 96], [1, 209, 97], [2, 211, 94], [1, 217, 90],
+[0, 220, 88], [0, 225, 81], [1, 228, 77], [1, 231, 71], [1, 232, 68], 
+[0, 230, 60], [0, 230, 52], [0, 230, 43], [0, 230, 33], [0, 228, 21],
+[0, 228, 11], [2, 229, 0], [16, 229, 0], [28, 229, 0], [40, 230, 0], 
+[56, 232, 0], [72, 232, 2], [84, 230, 1],
+[98, 231, 0],[111, 230, 0],[124, 230, 0], [137, 230, 1], [151, 228, 0],
+[162, 227, 0], [173, 229, 0], [186, 227, 0], [198, 224, 1], 
+[211, 226, 0], [221, 221, 0], [227, 216, 0], [230, 210, 1], 
+[237, 201, 1], [240, 193, 1],[242, 184, 0], [245, 173, 0], 
+[248, 165, 1], [250, 155, 0], [251, 145, 0], [252, 136, 1], 
+[254, 126, 1], [255, 115, 0], [255, 104, 3], [254, 95, 1], [255, 83, 1],
+[255, 72, 2], [255, 61, 0], [253, 49, 0], [255, 39, 2],
+[253, 28, 0], [255, 17, 4], [255, 8, 1], [254, 2, 1], [254, 0, 10],
+[255, 0, 14], [255, 0, 18], [251, 0, 24], [250, 0, 30], [250, 0, 30], 
+[248, 0, 35], [246, 0, 41], [246, 0, 41], [242, 0, 40], [242, 0, 40],
+[240, 0, 45], [237, 0, 46], [233, 0, 45], [230, 1, 44], [226, 0, 42], 
+[222, 0, 41], [218, 0, 39], [214, 0, 38], [206, 0, 36], [200, 1, 34], 
+[195, 0, 32], [189, 0, 30], [185, 0, 31], [177, 0, 28], [169, 0, 26],
+[162, 0, 24], [152, 0, 23],[144, 1, 21], [136, 1, 18], [128, 1, 20], 
+[121, 0, 19], [111, 0, 16], [104, 0, 14], [96, 0, 12], [88, 1, 10], 
+[83, 0, 12], [73, 0, 9], [67, 0, 9], [62, 1, 9], [57, 0, 7], [51, 0, 7],
+[46, 0, 5], [42, 0, 4], [39, 0, 5], [33, 1, 4], [30, 0, 4],[25, 0, 3], 
+[25, 0, 3], [22, 0, 2],[21, 0, 1], [16, 0, 0], [15, 1, 1], [14, 0, 0], 
+[12, 0, 0], [9, 0, 1], [9, 0, 1], [8, 0, 0]]
 
-path = r"C:\Users\theos\SpectroImg"
-base_name = 'spektrum'
-extension = '.jpg'
-file_index = 1
-cap = cv2.VideoCapture(1) #Bestämma vilken kamera som används
-ret, frame = cap.read()
-h,w, _ = frame.shape
-#skapa ett rutnär för alla pixlar på skärmen, når pixlar genom ex screen[10][10]
-screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
-WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
-Intensitet_värden = []
-Våglängd_värden = []
+def wave_to_rgb(wavlgth):
+    """Input : a float describing a wavelength in nanometer
+    Output : a numpy array giving the rgb values (between 0 and 1) 
+    associated with the colour percieved at this wavelength """
+    a = np.linspace(400,700,len(colormap))
+    colorindex = min(range(len(a)), key=lambda i: abs(a[i]-wavlgth))
+    col = colormap[colorindex]
+    return np.asarray(col)/255
 
-#Kollar efter position med intressant ljus så man kan ignorera allt annat ljus senare vid mätnings tillfället 
-def CaliFrame(frame):
-    kal_top_left_rect = None
-    kal_bottom_right_rect = None    
-    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
-    contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    if contours:
-        kal_largest_contour = max(contours, key=cv2.contourArea)
-        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(kal_largest_contour)
-        kal_top_left_rect = (x_rect-20, y_rect-20)
-        kal_bottom_right_rect = (x_rect + w_rect+20, y_rect + h_rect+20)
-    return kal_top_left_rect, kal_bottom_right_rect
+#With a small example to show that this solution makes very convincing results : 
 
-#Skapar en ruta runt allt intressant ljus så vi kan analysera det vid senare tillfälle
-def CalibratedImage(image, kal_top_left, kal_bottom_right):
-    kal_cropped_frame = image[kal_top_left[1]:kal_bottom_right[1], kal_top_left[0]:kal_bottom_right[0]]
-    kal_cropped_image = np.array(kal_cropped_frame)
-    return kal_cropped_image
+plt.figure(figsize=(13,5))
 
-#kollar efter största mängd pixlar och sedan skapar den minsta rektangeln som innesluter alla pixlar med x mkt färg
-def LargestGroupOfPixels(frame):
-    top_left_rect = None
-    bottom_right_rect = None    
-    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
-    contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    if contours:
-        largest_contour = max(contours, key=cv2.contourArea)
-        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
-        top_left_rect = (x_rect + 3, y_rect+ 3)
-        bottom_right_rect = (x_rect + w_rect - 3, y_rect + h_rect - 3)
-    return top_left_rect, bottom_right_rect
+wavelgthlist = np.linspace(400,700,len(colormap))
 
-#gör om den minsta rektangeln till en ny frame där vi sedan kan läsa av alla pixlar 
-def crop_image_to_rectangle(image, top_left, bottom_right):
-    cropped_frame = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
-    cropped_image = np.array(cropped_frame)
-    cv2.imwrite(r"C:\Users\theos\SpectroImg\cropped.png" , cropped_image)
-    return cropped_image
+plt.plot(wavelgthlist, [wave_to_rgb(k)[0] for k in wavelgthlist],color = (1,0,0) ,linewidth = 2)
+plt.plot(wavelgthlist, [wave_to_rgb(k)[1] for k in wavelgthlist],color = (0,1,0) ,linewidth = 2)
+plt.plot(wavelgthlist, [wave_to_rgb(k)[2] for k in wavelgthlist],color = (0,0,1) ,linewidth = 2)
 
-#kollar på varje färg samt dess intensitet och försöker aproximera till ett spektrum
-def rgb_to_wavelength(r, g, b, h, w):
-    luminosity = (0.0722 * b + 0.7152 * g + 0.2126 * r)
+plt.ylabel("Intensity of each pixel")
+plt.xlabel("Wavelength (nm)")
+plt.title("For each wavelength, pixel combination mimicking the perceived colour")
 
-    """  
-    print("------------------------------------")
-    print(luminosity)
-    print(r, g, b)
-    """
+height = 1.05
 
-    if r > g and r > b:  # Dominant röd
-        WaveInt[h][w] = (620 + (750 - 620 )* (r/255), luminosity) 
-    elif g > r and g > b:  # Dominant grön
-        WaveInt[h][w] = (495 + (570 - 495) * (g / 255), luminosity)
-    elif b > r and b > g:  # Dominant blå
-        WaveInt[h][w] = (450 + (495 - 450) * (b / 255), luminosity)
-    elif r > g and g > b:  # Gul
-        WaveInt[h][w] = (570 + (590 - 570) * ((r + g) / (255 * 2)), luminosity)
-    elif g > b and b > r:  # Cyan
-        WaveInt[h][w] = (490 + (520 - 490) * ((g + b) / (255 * 2)), luminosity)
-    elif b > r and r > g:  # Magenta
-        WaveInt[h][w] = (380 + (450 - 380) * ((b + r) / (255 * 2)), luminosity)
-    else:
-        return None  # Okänd färg
+for line in range(len(wavelgthlist)):
+  plt.plot([wavelgthlist[line],wavelgthlist[line]],[height,height*1.05], color = wave_to_rgb(wavelgthlist[line]), linewidth = 3.8, alpha = 1)
 
 
-#används genom - Create_pdf(output_pdf='my_spectrometer_results.pdf')
-#det är viktigt att spara grafen och bild på rätt plats innan
-#placera detta efter att grafen har skapats: plt.savefig(r"C:\Users\theos\SpectroGrapth")
-#spara cropped image bilden innan detta körs i: r"C:\Users\theos\CroppedSpectroImg"
-def Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg"):
-    pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=15) 
-    pdf.add_page()
-
-    # Text
-    pdf.set_font("Arial", size=12) 
-    pdf.multi_cell(0, 10, 'Spektrometer Resultat') 
-    pdf.ln(10)  # Add space
-
-    # Add image
-    image = cv2.imread(r"C:\Users\theos\SpectroImg\cropped.png")  # Ensure the path is correct and points to an image file
-    if image is None:
-        print("Error: Image not found.")
-        return
-
-    # Convert BGR to RGB
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    
-    # Save image as PNG
-    temp_image_path = 'temp_image.png'
-    cv2.imwrite(temp_image_path, image)
-
-    # Add image to PDF
-    pdf.image(temp_image_path, x=10, y=30, w=100)  # Ensure the image path is correct
-    pdf.ln(85)
-
-    # Add graph
-    graph_path = r"C:\Users\theos\SpectroImg\SpectroGraph.png"  # Ensure the path points to a valid image file (add .png extension)
-    pdf.image(graph_path, x=10, y=120, w=170)
-    pdf.ln(85)
-
-    # Add summary text
-    pdf.set_font("Arial", size=10)
-    sumText = ("Denna PDF presenterar resultat och bildanalys av spektrometern. "
-               "Den första bilden visar den tagna datan, och grafen under visar intensiteten som en funktion av våglängden.")
-    pdf.multi_cell(0, 10, sumText)
-
-    # Save the PDF
-    pdf.output(output_pdf)
-    print(f'PDF saved as {output_pdf}')
-
-
-while True:
-    ret, frame = cap.read()
-    cv2.imshow("cam",frame)
-    if cv2.waitKey(1) & 0xFF == ord("v"):
-        #nollställer färger
-        färger = [0, 0, 0, 0, 0, 0]
-        färgerVågländ = [0, 0, 0, 0, 0, 0]
-        kalibrerad = CalibratedImage(frame,kal_top_left_rect, kal_bot_right_rect)
-        top_left_rect, bottom_right_rect = LargestGroupOfPixels(kalibrerad)
-        cropped_image = crop_image_to_rectangle(kalibrerad, top_left_rect, bottom_right_rect)
-        #Ange en färg till varje pixel och sortera ut onödiga färger
-        #Reinitialize Intensitet for the cropped image
-        h, w, _ = cropped_image.shape
-        WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
-
-        for pxHeight in range(h):
-            for pxWidth in range(w):
-                b, g, r = cropped_image[pxHeight, pxWidth]
-                if (b > 3 and g > 3 and r > 3):
-                    #aproximera våglängden och intensitet
-                    rgb_to_wavelength(r,g,b,pxHeight,pxWidth)
-        # Iterera över alla pixlar och samla intensitet och våglängd
-        for height in range(h):
-            for width in range(w):
-                intensity = WaveInt[height][width][1]  # Intensitet (y-värden)
-                wavelength = WaveInt[height][width][0]  # Våglängd (x-värden)
-                # Lägg till i listorna
-                Intensitet_värden.append(intensity)
-                Våglängd_värden.append(wavelength)
-
-        # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
-        plt.xlim(350, 800)
-        plt.ylim(0,100)
-        plt.plot(Våglängd_värden, Intensitet_värden, 'o')  # 'o' för punkter
-        plt.xlabel("Wavelength (nm)")  # Sätt x-axelns etikett
-        plt.ylabel("Intensity")  # Sätt y-axelns etikett
-        plt.title("Intensity vs Wavelength")  # Titel på grafen
-        plt.savefig(r"C:\Users\theos\SpectroImg\SpectroGraph.png") # sparar grafen
-        plt.show()  # Visa grafen
-        np.savetxt(r"C:\Users\theos\SpectroImg\Intensitet.csv", Intensitet_värden, delimiter=',', fmt='%d')
-        np.savetxt(r"C:\Users\theos\SpectroImg\Våglängd.csv", Våglängd_värden, delimiter=',', fmt='%d')
-        Create_pdf(output_pdf = r"C:\Users\theos\SpectroImg\my_spectrometer_results.pdf") #sparar pdf
-
-        #Clearar alla arrayer
-        WaveInt.clear()
-        Intensitet_värden.clear()
-        Våglängd_värden.clear()
-
-    elif cv2.waitKey(1) & 0xFF == ord('k'):                      # Kalibrerar rutan så den kollar på rätt sak
-        kal_top_left_rect, kal_bot_right_rect = CaliFrame(frame)
-        kalibrerad = CalibratedImage(frame,kal_top_left_rect, kal_bot_right_rect)
-        cv2.imshow('kalibreread', kalibrerad)
-    elif cv2.waitKey(1) & 0xFF == ord("q"):                      # stänger ner programmet 
-        break
-cap.release()
-cv2.destroyAllWindows()
+plt.show()

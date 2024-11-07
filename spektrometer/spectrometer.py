@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from fpdf import FPDF
 import pandas as pd
-
+import os
+deltlaser = 0
 path = r"C:\Users\theos\SpectroImg"
 base_name = 'spektrum'
 extension = '.jpg'
@@ -22,9 +23,10 @@ WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 Intensitet_värden = []
 Våglängd_värden = []
 #inställningar för olika skalmningar m.m
-waveScale = 10 #ökar skillnaden mellan våglängder innom ett visst område
+waveScale = 1 #ökar skillnaden mellan våglängder innom ett visst område
 spectBorder = 3 #minskar skalningen så att ljud försvinner
-
+wavelength_path = r"C:\Users\theos\SpectroImg\Våglängder.xlsx"
+intensity_path = r"C:\Users\theos\SpectroImg\Intensitet.xlsx"
 #Skapar den minsta rektangeln som innesluter alla pixlar med x mkt färg
 
 def crop_image_to_rectangle(image, top_left, bottom_right):
@@ -36,24 +38,27 @@ def crop_image_to_rectangle(image, top_left, bottom_right):
 #kollar på varje färg samt dess intensitet och försöker aproximera till ett spektrum
 def rgb_to_wavelength(r, g, b, gray, h, w):
     luminosity = gray/255
+    r = int (r)
+    g= int(g)
+    b = int(b)
+
     
     print("------------------------------------")
     print(luminosity)
     print(r, g, b)
 
-    if r > g and r > b:  # Dominant röd
-        #våglängd, intensitet
-        WaveInt[h][w] = (620 + (750 - 620 )* (r*waveScale/255), luminosity) 
-    elif g > r and g > b:  # Dominant grön
-        WaveInt[h][w] = (495 + (570 - 495) * (g*waveScale / 255), luminosity)
-    elif b > r and b > g:  # Dominant blå
-        WaveInt[h][w] = (450 + (495 - 450) * (b *waveScale/ 255), luminosity)
-    elif r > g and g > b:  # Gul
+    if r > g and g > b:  # Gul
         WaveInt[h][w] = (570 + (590 - 570) * ((r + g)*waveScale / (255 * 2)), luminosity)
     elif g > b and b > r:  # Cyan
-        WaveInt[h][w] = (490 + (520 - 490) * ((g + b)*waveScale / (255 * 2)), luminosity)
+        WaveInt[h][w] = (490 + (520 - 490) * ((g + b)*waveScale / (255 * 2)), luminosity) 
     elif b > r and r > g:  # Magenta
-        WaveInt[h][w] = (380 + (450 - 380) * ((b + r)*waveScale/ (255 * 2)), luminosity)
+        WaveInt[h][w] = (380 + (450 - 380) * ((b + r)*waveScale / (255 * 2)), luminosity) 
+    elif r > g and r > b:  # Dominant röd              våglängd, intensitet
+        WaveInt[h][w] = (620 + (750 - 620 )* (r*waveScale / 255), luminosity)
+    elif g > r and g > b:  # Dominant grön
+        WaveInt[h][w] = (495 + (570 - 495) * (g*waveScale / 255), luminosity) 
+    elif b > r and b > g:  # Dominant blå
+        WaveInt[h][w] = (450 + (495 - 450) * (b *waveScale / 255), luminosity) 
     else:
         return None  # Okänd färg
 
@@ -158,33 +163,43 @@ while True:
                 #aproximera våglängden och intensitet
                 rgb_to_wavelength(r,g,b,gray,pxHeight,pxWidth)
         # Iterera över alla pixlar och samla intensitet och våglängd
+
         for height in range(h):
+
+            #Hantera rader
+            sanitized_row = []
             for width in range(w):
-                intensity = WaveInt[height][width][1]  # Intensitet (y-värden)
-                wavelength = WaveInt[height][width][0]  # Våglängd (x-värden)
+                intensity = WaveInt[height][width][1] # Intensitet (y-värden)
+                wavelength = int(WaveInt[height][width][0])  # Våglängd (x-värden)
                 # Lägg till i listorna
+
                 Intensitet_värden.append(intensity)
                 Våglängd_värden.append(wavelength)
 
-        # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
-        for row in WaveInt:
-            sanitized_row = []
-            for pixel in row:
-            # Ensure each pixel has exactly two values (wavelength and intensity)
-                if isinstance(pixel, (list, tuple)) and len(pixel) == 2 and all(isinstance(x, (int, float)) for x in pixel):
-                    sanitized_row.append(pixel)
-                else:
-                    sanitized_row.append([0, 0])  # Fallback if invalid data
+                sanitized_row.append([wavelength, intensity])
+            
+            #Lägg till rad för varje skapad rad
             sanitized_WaveInt.append(sanitized_row)
+
+        # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
+            
         max_row_length = max(len(row) for row in sanitized_WaveInt)
         for row in sanitized_WaveInt:
             while len(row) < max_row_length:
                 row.append([0, 0])  # Lägger till [0,0] så alla rader blir lika långa i arrayen
+        
         WaveInt_np = np.array(sanitized_WaveInt) #Gör om WaveInt till 2 2d arrayer som sen kan sparas i excel fil 
         Våglängdarray = WaveInt_np[:,:,0]
         Intensitetarray = WaveInt_np[:,:,1]
         VåglängdDF = pd.DataFrame(Våglängdarray) # sparar våglängd och intensitet i 2 separata excel document
         IntensitetDF = pd.DataFrame(Intensitetarray)
+
+
+# Remove files if they exist, then save the new versions
+
+        if os.path.exists(wavelength_path) or os.path.exists(intensity_path):
+            os.remove(wavelength_path)
+            os.remove(intensity_path)
         VåglängdDF.to_excel(r"C:\Users\theos\SpectroImg\Våglängder.xlsx", index=False, header=False)
         IntensitetDF.to_excel(r"C:\Users\theos\SpectroImg\Intensitet.xlsx", index=False, header=False)
         plt.xlim(350, 800)
@@ -205,7 +220,7 @@ while True:
     elif cv2.waitKey(1) & 0xFF == ord('k'):                      # Kalibrerar rutan så den kollar på rätt sak
         kal_top_left_rect, kal_bot_right_rect = CaliFrame(frame)
         kalibrerad = CalibratedImage(frame,kal_top_left_rect, kal_bot_right_rect)
-        cv2.imshow('kalibreread', kalibrerad)
+        cv2.imshow('kalibrerad', kalibrerad)
     elif cv2.waitKey(1) & 0xFF == ord("q"):                      # stänger ner programmet 
         break
 cap.release()

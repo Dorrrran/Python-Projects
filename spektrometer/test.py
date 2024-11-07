@@ -1,78 +1,77 @@
-import cv2
 import numpy as np
+import matplotlib.pyplot as plt
+colormap = [[6, 1, 31],[12, 0, 40],[14, 0, 51], [16, 1, 60],
+ [17, 1, 76], [23, 0, 90], [26, 1, 105], [28, 0, 119], [28, 0, 136], 
+[34, 0, 151],[36, 1, 165], [37, 0, 176], [37, 1, 187], [36, 0, 194],
+[37, 0, 202], [34, 0, 209], [31, 0, 217], [28, 1, 220], [25, 0, 224],
+[18, 1, 227], [16, 0, 229], [14, 0, 233], [10, 0, 237], [9, 0, 237],
+[7, 0, 240], [3, 0, 242], [0, 0, 244], [0, 0, 244], [2, 5, 244], 
+[1, 8, 244], [0, 13, 242], [0, 18, 242], [2, 22, 239],
+[0, 28, 236], [0, 33, 236], [0, 37, 232], [0, 44, 229], [2, 49, 227],
+[0, 55, 220], [0, 60, 218], [0, 66, 214], [1, 73, 209], [0, 77, 205],
+[0, 84, 200], [0, 91, 194], [0, 96, 193], [0, 101, 189], [0, 106, 182],
+[0, 111, 177], [1, 118, 172], [0, 120, 165], [0, 122, 159], 
+[0, 128, 153], [1, 131, 147], [1, 132, 140], [1, 135, 134], 
+[0, 140, 131], [0, 145, 126], [0, 148, 124], [0, 152, 122], 
+[0, 158, 118], [1, 162, 118], [1, 168, 116], [0, 172, 114],
+[0, 178, 113],[0, 182, 112], [0, 186, 111], [1, 188, 109], 
+[2, 191, 107], [0, 194, 107], [1, 195, 108], [0, 198, 101], 
+[1, 200, 99], [0, 204, 96], [1, 209, 97], [2, 211, 94], [1, 217, 90],
+[0, 220, 88], [0, 225, 81], [1, 228, 77], [1, 231, 71], [1, 232, 68], 
+[0, 230, 60], [0, 230, 52], [0, 230, 43], [0, 230, 33], [0, 228, 21],
+[0, 228, 11], [2, 229, 0], [16, 229, 0], [28, 229, 0], [40, 230, 0], 
+[56, 232, 0], [72, 232, 2], [84, 230, 1],
+[98, 231, 0],[111, 230, 0],[124, 230, 0], [137, 230, 1], [151, 228, 0],
+[162, 227, 0], [173, 229, 0], [186, 227, 0], [198, 224, 1], 
+[211, 226, 0], [221, 221, 0], [227, 216, 0], [230, 210, 1], 
+[237, 201, 1], [240, 193, 1],[242, 184, 0], [245, 173, 0], 
+[248, 165, 1], [250, 155, 0], [251, 145, 0], [252, 136, 1], 
+[254, 126, 1], [255, 115, 0], [255, 104, 3], [254, 95, 1], [255, 83, 1],
+[255, 72, 2], [255, 61, 0], [253, 49, 0], [255, 39, 2],
+[253, 28, 0], [255, 17, 4], [255, 8, 1], [254, 2, 1], [254, 0, 10],
+[255, 0, 14], [255, 0, 18], [251, 0, 24], [250, 0, 30], [250, 0, 30], 
+[248, 0, 35], [246, 0, 41], [246, 0, 41], [242, 0, 40], [242, 0, 40],
+[240, 0, 45], [237, 0, 46], [233, 0, 45], [230, 1, 44], [226, 0, 42], 
+[222, 0, 41], [218, 0, 39], [214, 0, 38], [206, 0, 36], [200, 1, 34], 
+[195, 0, 32], [189, 0, 30], [185, 0, 31], [177, 0, 28], [169, 0, 26],
+[162, 0, 24], [152, 0, 23],[144, 1, 21], [136, 1, 18], [128, 1, 20], 
+[121, 0, 19], [111, 0, 16], [104, 0, 14], [96, 0, 12], [88, 1, 10], 
+[83, 0, 12], [73, 0, 9], [67, 0, 9], [62, 1, 9], [57, 0, 7], [51, 0, 7],
+[46, 0, 5], [42, 0, 4], [39, 0, 5], [33, 1, 4], [30, 0, 4],[25, 0, 3], 
+[25, 0, 3], [22, 0, 2],[21, 0, 1], [16, 0, 0], [15, 1, 1], [14, 0, 0], 
+[12, 0, 0], [9, 0, 1], [9, 0, 1], [8, 0, 0]]
 
-cap = cv2.VideoCapture(1)
-top_left_rect = None
-bottom_right_rect = None    
-def LargestGroupOfPixels(frame):
-        top_left_rect = None
-        bottom_right_rect = None    
 
-        while True:
-        
-        # Show the current frame
-            cv2.imshow("Camera Feed", frame)
+def wave_to_rgb(wavlgth):
+    """Input : a float describing a wavelength in nanometer
+    Output : a numpy array giving the rgb values (between 0 and 1) 
+    associated with the colour percieved at this wavelength """
+    a = np.linspace(400,700,len(colormap))
+    colorindex = min(range(len(a)), key=lambda i: abs(a[i]-wavlgth))
+    col = colormap[colorindex]
+    return np.asarray(col)/255
 
-        # Convert the frame to grayscale
-            _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#With a small example to show that this solution makes very convincing results : 
 
-        # Apply thresholding to get a binary image
-            binary = cv2.threshold(_img_conv, 20, 255, cv2.THRESH_BINARY)[1]
+plt.figure(figsize=(13,5))
 
-        # Find contours in the binary image
-            contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+wavelgthlist = np.linspace(400,700,len(colormap))
 
-        # If there are any contours found
-            if contours:
-                print(f"Number of contours found: {len(contours)}")
-                for cnt in contours:
-                    area = cv2.contourArea(cnt)
-                    print(f"Contour area: {area}")
 
-                # Find the largest contour by area
-                largest_contour = max(contours, key=cv2.contourArea)
+plt.plot(wavelgthlist, [wave_to_rgb(k)[0] for k in wavelgthlist],color = (1,0,0) ,linewidth = 2)
+plt.plot(wavelgthlist, [wave_to_rgb(k)[1] for k in wavelgthlist],color = (0,1,0) ,linewidth = 2)
+plt.plot(wavelgthlist, [wave_to_rgb(k)[2] for k in wavelgthlist],color = (0,0,1) ,linewidth = 2)
 
-                # Draw the bounding rectangle around the largest contour
-                x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
-                top_left_rect = (x_rect, y_rect)
-                bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
 
-                # Draw the rectangle on the frame
-                cv2.rectangle(frame, top_left_rect, bottom_right_rect, (0, 255, 0), 2)  # Green rectangle
 
-            # Display the frame with the rectangle
-            cv2.imshow("Frame with Rectangle", frame)
+plt.ylabel("Intensity of each pixel")
+plt.xlabel("Wavelength (nm)")
+plt.title("For each wavelength, pixel combination mimicking the perceived colour")
 
-            # Exit if 'q' is pressed
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+height = 1.05
 
-        cap.release()
-        cv2.destroyAllWindows()
+for line in range(len(wavelgthlist)):
+  plt.plot([wavelgthlist[line],wavelgthlist[line]],[height,height*1.05], color = wave_to_rgb(wavelgthlist[line]), linewidth = 3.8, alpha = 1)
 
-while True:
-    ret, frame = cap.read()
 
-    # Call the function to start processing the video feed
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-cap.release()
-cv2.destroyAllWindows()
-def LargestGroupOfPixels(frame):
-    top_left_rect = None
-    bottom_right_rect = None    
-    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    binary = cv2.threshold(_img_conv, 20, 255, cv2.THRESH_BINARY)[1]
-    contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    if contours:
-        print(f"Number of contours found: {len(contours)}")
-        for cnt in contours:
-            area = cv2.contourArea(cnt)
-            print(f"Contour area: {area}")
-            largest_contour = max(contours, key=cv2.contourArea)
-            x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
-            top_left_rect = (x_rect, y_rect)
-            bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
-    return top_left_rect, bottom_right_rect
+plt.show()
