@@ -111,8 +111,8 @@ def LargestGroupOfPixels(frame):
     if contours:
         largest_contour = max(contours, key=cv2.contourArea)
         x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
-        top_left_rect = (x_rect + spectBorder, y_rect + spectBorder)
-        bottom_right_rect = (x_rect + w_rect - spectBorder, y_rect + h_rect - spectBorder)
+        top_left_rect = (x_rect, y_rect + spectBorder)
+        bottom_right_rect = (x_rect + w_rect, y_rect + h_rect - spectBorder)
     return top_left_rect, bottom_right_rect
 
 while True:
@@ -178,3 +178,7 @@ while True:
 
     elif cv2.waitKey(1) & 0xFF == ord('k'):
         kal_top_left_rect, kal_bot_right_rect = CaliFrame(frame)
+    elif cv2.waitKey(1) & 0xFF == ord("q"):                      # stänger ner programmet 
+        break
+cap.release()
+cv2.destroyAllWindows()

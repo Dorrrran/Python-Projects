@@ -172,8 +172,6 @@ while True:
                 intensity = WaveInt[height][width][1] # Intensitet (y-värden)
                 wavelength = int(WaveInt[height][width][0])  # Våglängd (x-värden)
                 # Lägg till i listorna
-                print(intensity)
-                print(wavelength)
                 Intensitet_värden.append(intensity)
                 Våglängd_värden.append(wavelength)
 
@@ -185,7 +183,10 @@ while True:
         # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
             
         
-        WaveInt_np = np.array(sanitized_WaveInt) #Gör om WaveInt till 2 2d arrayer som sen kan sparas i excel fil 
+        WaveInt_np = np.array(sanitized_WaveInt, dtype = float) #Gör om WaveInt till 2 2d arrayer som sen kan sparas i excel fil 
+        print(WaveInt_np)
+        print(WaveInt_np.dtype)
+        print(WaveInt_np.shape)
         Våglängdarray = WaveInt_np[:,:,0]
         Intensitetarray = WaveInt_np[:,:,1]
         VåglängdDF = pd.DataFrame(Våglängdarray) # sparar våglängd och intensitet i 2 separata excel document
