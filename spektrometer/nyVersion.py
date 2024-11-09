@@ -49,7 +49,7 @@ def rgb_to_wavelength(gray, pxw, w):
     luminosity = gray / 255
     # Omvandla pixelpositionen pxw till en våglängd
     wavelength = min_wavelength + (pxw / w) * (max_wavelength - min_wavelength)
-    WaveInt[w]= wavelength, luminosity
+    WaveInt[pxw]= wavelength, luminosity
 
 #skapa pdf med datainsammling
 def Create_pdf(output_pdf= r"C:\Users\theos\SpectroImg"):
@@ -113,36 +113,20 @@ def CaliFrame(frame):
     if contours:
         kal_largest_contour = max(contours, key=cv2.contourArea)
         x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(kal_largest_contour)
-        kal_top_left_rect = (x_rect-20, y_rect-20)
-        kal_bottom_right_rect = (x_rect + w_rect+20, y_rect + h_rect+20)
+        kal_top_left_rect = (x_rect, y_rect)
+        kal_bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
     return kal_top_left_rect, kal_bottom_right_rect
-
-
-# hittar största mängd pixlar och skickar ut 2 (top left och bot right) koordinater för den rektangeln som innesluter detta område
-def LargestGroupOfPixels(frame):
-    top_left_rect = None
-    bottom_right_rect = None    
-    _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
-    contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    if contours:
-        largest_contour = max(contours, key=cv2.contourArea)
-        x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(largest_contour)
-        top_left_rect = (x_rect, y_rect+ spectBorder)
-        bottom_right_rect = (x_rect + w_rect, y_rect + h_rect - spectBorder)
-    return top_left_rect, bottom_right_rect
-
+    
 while True:
     ret, frame = cap.read()
     cv2.imshow("cam",frame)
     if cv2.waitKey(1) & 0xFF == ord("v"):
         kalibrerad = CalibratedImage(frame,kal_top_left_rect, kal_bot_right_rect)
-        top_left_rect, bottom_right_rect = LargestGroupOfPixels(kalibrerad)
-        cropped_image = crop_image_to_rectangle(kalibrerad, top_left_rect, bottom_right_rect)
+        cropped_image = crop_image_to_rectangle(kalibrerad, kal_top_left_rect, kal_bottom_right_rect)
         #ange en färg till varje pixel och sortera ut onödiga färger
         # Reinitialize Intensitet for the cropped image
         h, w, _ = cropped_image.shape
-        WaveInt = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
+        WaveInt = [[0, 0] for _ in range(w)]
         #SvartVit version av bild
         cropped_image_gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
         for pxWidth in range(w):
@@ -150,15 +134,10 @@ while True:
             #aproximera våglängden och intensitet
             rgb_to_wavelength(gray,pxWidth)
 
-
         # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
-        WaveInt_np = np.array(sanitized_WaveInt) #Gör om WaveInt till 2 2d arrayer som sen kan sparas i excel fil 
-        for row in WaveInt:
-            for col in row:
-                if col[0] == 0 or col[1] == 0:
-                    print("Unexpected zero at:", col)
-        Våglängdarray = WaveInt_np[:,:,0]
-        Intensitetarray = WaveInt_np[:,:,1]
+        WaveInt_np = np.array(WaveInt) #Gör om WaveInt till 2 2d arrayer som sen kan sparas i excel fil 
+        Våglängdarray = WaveInt_np[:,0]
+        Intensitetarray = WaveInt_np[:,1]
         VåglängdDF = pd.DataFrame(Våglängdarray) # sparar våglängd och intensitet i 2 separata excel document
         IntensitetDF = pd.DataFrame(Intensitetarray)
 
@@ -169,23 +148,14 @@ while True:
             os.remove(intensity_path)
         VåglängdDF.to_excel(r"C:\Users\theos\SpectroImg\Våglängder.xlsx", index=False, header=False)
         IntensitetDF.to_excel(r"C:\Users\theos\SpectroImg\Intensitet.xlsx", index=False, header=False)
-        # Skapa en finare uppsättning våglängder mellan dina ursprungliga värden
-        wavelengths_fine = np.linspace(min(Våglängd_värden_intensitet), max(Våglängd_värden_intensitet), 500)
-
-        # Skapa en interpolationsfunktion baserad på dina ursprungliga data
-        interpolation_function = interp1d(Våglängd_värden_intensitet, Intensitet_värden_intensitet, kind='cubic')
-
-        # Använd interpolationsfunktionen för att få ut smidiga intensitetsvärden för de nya våglängderna
-        intensities_fine = interpolation_function(wavelengths_fine)
 
         # Plotta den släta linjen
         plt.xlim(350, 800)
         plt.ylim(0, 1)
-        plt.plot(wavelengths_fine, intensities_fine, '-', color="blue", label="Interpolerad kurva")  # Slät kurva
-        plt.scatter(Våglängd_värden_intensitet, Intensitet_värden_intensitet, color="red", label="Ursprungliga punkter")  # Ursprungsdata
+        plt.plot(Våglängdarray , Intensitetarray, 'o-', color="blue", label="Interpolerad kurva")  # Slät kurva
         plt.xlabel("Wavelength (nm)")
         plt.ylabel("Intensity")
-        plt.title("Intensity vs Wavelength (Smooth Curve)")
+        plt.title("Intensity vs Wavelength")
         plt.legend()
         plt.savefig(r"C:\Users\theos\SpectroImg\SpectroGraph.png")  # Spara grafen som PNG-bild
         plt.show()  
