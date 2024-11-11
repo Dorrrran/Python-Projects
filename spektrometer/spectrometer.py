@@ -4,29 +4,13 @@ import numpy as np
 from fpdf import FPDF
 import pandas as pd
 import os
-deltlaser = 0
-path = r"C:\Users\theos\SpectroImg"
-base_name = 'spektrum'
-extension = '.jpg'
-file_index = 1
 cap = cv2.VideoCapture(1)
-pixellost = 0
-#skapa globara variabler för varje färg
-färger = [0, 0, 0, 0, 0, 0]
-färgerVågländ = [0, 0, 0, 0, 0, 0]
 #skapa ett rutnär för alla pixlar på skärmen, når pixlar genom ex screen[10][10]
 sanitized_WaveInt = []
 ret, frame = cap.read()
 h,w, _ = frame.shape
 screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 WaveInt = [[0, 0] for _ in range(w)]
-Intensitet_värden_intensitet = []
-Våglängd_värden_intensitet = []
-Intensitet_värden = []
-Våglängd_värden = []
-#inställningar för olika skalmningar m.m
-waveScale = 1 #ökar skillnaden mellan våglängder innom ett visst område
-spectBorder = 3 #minskar skalningen så att ljud försvinner
 wavelength_path = r"C:\Users\theos\SpectroImg\Våglängder.xlsx"
 intensity_path = r"C:\Users\theos\SpectroImg\Intensitet.xlsx"
 #Skapar den minsta rektangeln som innesluter alla pixlar med x mkt färg
@@ -165,14 +149,14 @@ while True:
         plt.clf()  # Rensar grafen efter visning
         #Clearar alla arrayer
         WaveInt.clear()
-        Intensitet_värden.clear()
-        Våglängd_värden.clear()
 
     elif cv2.waitKey(1) & 0xFF == ord('k'):                      # Kalibrerar rutan så den kollar på rätt sak
         kal_top_left_rect, kal_bot_right_rect = CaliFrame(frame)
         kalibrerad = CalibratedImage(frame,kal_top_left_rect, kal_bot_right_rect)
         cv2.imshow('kalibrerad', kalibrerad)
+
     elif cv2.waitKey(1) & 0xFF == ord("q"):                      # stänger ner programmet
         break
+
 cap.release()
 cv2.destroyAllWindows()
