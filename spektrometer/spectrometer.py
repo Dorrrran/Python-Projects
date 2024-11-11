@@ -13,9 +13,7 @@ screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
 WaveInt = [[0, 0] for _ in range(w)]
 wavelength_path = r"C:\Users\theos\SpectroImg\Våglängder.xlsx"
 intensity_path = r"C:\Users\theos\SpectroImg\Intensitet.xlsx"
-#Skapar den minsta rektangeln som innesluter alla pixlar med x mkt färg
 
-#våglängd inställningar
 # Definiera synliga våglängdsgränser
 min_wavelength = 380  # nm
 max_wavelength = 750  # nm
