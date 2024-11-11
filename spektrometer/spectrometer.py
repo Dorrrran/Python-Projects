@@ -15,7 +15,6 @@ WaveInt = [[0, 0] for _ in range(w)] #skapar en variabel som håller alla vågl�
 wavelength_path = r"C:\Users\theos\SpectroImg\Våglängder.xlsx"
 intensity_path = r"C:\Users\theos\SpectroImg\Intensitet.xlsx"
 
-#våglängd inställningar
 # Definiera synliga våglängdsgränser
 min_wavelength = 380  # nm
 max_wavelength = 750  # nm
