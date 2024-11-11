@@ -1,3 +1,4 @@
+#bibliotek som används till spektrometerns funktion
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -5,21 +6,21 @@ from fpdf import FPDF
 import pandas as pd
 import os
 cap = cv2.VideoCapture(1)
-#skapa ett rutnär för alla pixlar på skärmen, når pixlar genom ex screen[10][10]
+
 sanitized_WaveInt = []
 ret, frame = cap.read()
 h,w, _ = frame.shape
-screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)]
-WaveInt = [[0, 0] for _ in range(w)]
+screen = [[[0, 0, 0] for _ in range(w)] for _ in range(h)] #skapa ett rutnär för alla pixlar på skärmen, når pixlar genom ex screen[10][10]
+WaveInt = [[0, 0] for _ in range(w)] #skapar en variabel som håller alla våglängder och en intensitet som hör ihop med den våglängden
 wavelength_path = r"C:\Users\theos\SpectroImg\Våglängder.xlsx"
 intensity_path = r"C:\Users\theos\SpectroImg\Intensitet.xlsx"
-#Skapar den minsta rektangeln som innesluter alla pixlar med x mkt färg
 
 #våglängd inställningar
 # Definiera synliga våglängdsgränser
 min_wavelength = 380  # nm
 max_wavelength = 750  # nm
 
+#Denna funktion används för att kalibrera spektrometern. Den kommer beskära bilden och ge ut "cropped_frame"
 def crop_image_to_rectangle(image, top_left, bottom_right):
     cropped_frame = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
     cropped_image = np.array(cropped_frame)
