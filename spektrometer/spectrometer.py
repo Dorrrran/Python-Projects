@@ -4,7 +4,6 @@ import numpy as np
 from fpdf import FPDF
 import pandas as pd
 import os
-from scipy.interpolate import make_interp_spline
 deltlaser = 0
 path = r"C:\Users\theos\SpectroImg"
 base_name = 'spektrum'

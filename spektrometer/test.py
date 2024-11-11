@@ -137,8 +137,7 @@ while True:
             rgb_to_wavelength(gray,gray1,gray2,pxWidth,w)
 
         WaveInt.insert(0, (WaveInt[0][0]-1, 0))
-        WaveInt.append((WaveInt[-1][0] + 1, 0)) 
-        # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
+        WaveInt.append((WaveInt[-1][0] + 1, 0))  # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
         WaveInt_np = np.array(WaveInt) #Gör om WaveInt till 2 2d arrayer som sen kan sparas i excel fil
         Våglängdarray = WaveInt_np[:,0]
         Intensitetarray = WaveInt_np[:,1]
