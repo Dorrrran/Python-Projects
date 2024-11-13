@@ -17,7 +17,7 @@ intensity_path = r"C:\Users\theos\SpectroImg\Intensitet.xlsx"
 
 # Definiera synliga våglängdsgränser
 min_wavelength = 380  # nm
-max_wavelength = 750  # nm
+max_wavelength = 970  # nm
 
 #Denna funktion används för att kalibrera spektrometern. Den kommer beskära bilden och ge ut "cropped_frame"
 def crop_image_to_rectangle(image, top_left, bottom_right):
@@ -103,13 +103,13 @@ def CaliFrame(frame):
     kal_top_left_rect = None
     kal_bottom_right_rect = None    
     _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
+    binary = cv2.threshold(_img_conv, 55, 255, cv2.THRESH_BINARY)[1]
     contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     if contours:
         kal_largest_contour = max(contours, key=cv2.contourArea)
         x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(kal_largest_contour)
-        kal_top_left_rect = (x_rect, y_rect)
-        kal_bottom_right_rect = (x_rect + w_rect, y_rect + h_rect)
+        kal_top_left_rect = (x_rect, y_rect+2)
+        kal_bottom_right_rect = (x_rect + w_rect + 70, y_rect + h_rect - 7)
     return kal_top_left_rect, kal_bottom_right_rect
    
 while True:
@@ -157,7 +157,7 @@ while True:
 
         # Skapa grafen med våglängd på x-axeln och intensitet på y-axeln
         # Plotta den släta linjen
-        plt.xlim(350, 800) #x axel
+        plt.xlim(350, 1000) #x axel
         plt.ylim(0, 110)   #y axel
         plt.plot(WaveLengthArray , IntensityArray/Intensity_max * 100, '-', color="black")  # Slät kurva
         plt.xlabel("Wavelength (nm)")

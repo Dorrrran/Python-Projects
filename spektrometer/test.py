@@ -108,7 +108,7 @@ def CaliFrame(frame):
     kal_top_left_rect = None
     kal_bottom_right_rect = None    
     _img_conv = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    binary = cv2.threshold(_img_conv, 40, 255, cv2.THRESH_BINARY)[1]
+    binary = cv2.threshold(_img_conv, 70, 255, cv2.THRESH_BINARY)[1]
     contours, hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     if contours:
         kal_largest_contour = max(contours, key=cv2.contourArea)
