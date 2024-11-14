@@ -128,8 +128,10 @@ while True:
         WaveInt = [[0, 0] for _ in range(w)]
         #SvartVit version av beskuren bild
         for i in 4:
+            ret, frame = cap.read()
             cropped_image = crop_image_to_rectangle(frame, kal_top_left_rect, kal_bot_right_rect)
             cropped_image_gray = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+
             for pxWidth in range(w):
             #kollar på raden i mitten av det som ges av gittret, Även raden under och över för säkrare resultat
                 gray = cropped_image_gray[int(h/2)-1, pxWidth]
@@ -137,7 +139,7 @@ while True:
                 gray2 = cropped_image_gray[int(h/2)+1, pxWidth]
             #aproximera våglängden och intensitet, Se funktion längre upp
                 rgb_to_wavelength(gray,gray1,gray2,pxWidth,w)
-                
+
 
         #detta påverkar inte mätreslutat. Ändast för att göra grafen snyggare genom att avsluta och sätta ett startvärde till 0
         WaveInt.insert(0, (WaveInt[0][0]-1, 0))

@@ -114,8 +114,6 @@ def CaliFrame(frame):
    
 while True:
     ret, frame = cap.read()
-    cap = cv2.VideoCapture(1)
-    ret, frame = cap.read()
     cv2.imshow("cam",frame) #ger en live feed till användaren, där man kan se allt kameran kan se. (Detta är inte Cropped Frame)!
 
     #När man trycker på v så tar men ett mät resultat OBS! Spektrometern måste kalibreras innan
