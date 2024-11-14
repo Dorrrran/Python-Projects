@@ -114,11 +114,15 @@ def CaliFrame(frame):
    
 while True:
     ret, frame = cap.read()
-
+    cap = cv2.VideoCapture(1)
+    ret, frame = cap.read()
     cv2.imshow("cam",frame) #ger en live feed till användaren, där man kan se allt kameran kan se. (Detta är inte Cropped Frame)!
 
     #När man trycker på v så tar men ett mät resultat OBS! Spektrometern måste kalibreras innan
     if cv2.waitKey(1) & 0xFF == ord("v"):
+        cap.release()
+        cap = cv2.VideoCapture(1)
+        ret, frame = cap.read()
         Calibrated = CalibratedImage(frame,kal_top_left_rect, kal_bot_right_rect)
         cropped_image = crop_image_to_rectangle(frame, kal_top_left_rect, kal_bot_right_rect)
         #ange en färg till varje pixel och sortera ut onödiga färger
