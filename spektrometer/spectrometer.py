@@ -5,6 +5,7 @@ import numpy as np
 from fpdf import FPDF
 import pandas as pd
 import os
+import time
 cap = cv2.VideoCapture(1)
 
 sanitized_WaveInt = []
@@ -108,8 +109,8 @@ def CaliFrame(frame):
     if contours:
         kal_largest_contour = max(contours, key=cv2.contourArea)
         x_rect, y_rect, w_rect, h_rect = cv2.boundingRect(kal_largest_contour)
-        kal_top_left_rect = (x_rect, y_rect+2)
-        kal_bottom_right_rect = (x_rect + w_rect + 70, y_rect + h_rect - 7)
+        kal_top_left_rect = (x_rect, y_rect+8)
+        kal_bottom_right_rect = (x_rect + w_rect + 75, y_rect + h_rect - 6)
     return kal_top_left_rect, kal_bottom_right_rect
    
 while True:
@@ -121,6 +122,7 @@ while True:
         cap.release()
         cap = cv2.VideoCapture(1)
         ret, frame = cap.read()
+        time.sleep(0.3)
         Calibrated = CalibratedImage(frame,kal_top_left_rect, kal_bot_right_rect)
         cropped_image = crop_image_to_rectangle(frame, kal_top_left_rect, kal_bot_right_rect)
         #ange en färg till varje pixel och sortera ut onödiga färger
@@ -150,8 +152,9 @@ while True:
 
 
         # Remove files if they exist, then save the new versions
-        if os.path.exists(wavelength_path) or os.path.exists(intensity_path):
+        if os.path.exists(wavelength_path):
             os.remove(wavelength_path)
+        if os.path.exists(intensity_path):
             os.remove(intensity_path)
         WaveLengthDF.to_excel(r"C:\Users\theos\SpectroImg\Våglängder.xlsx", index=False, header=False)
         IntensityDF.to_excel(r"C:\Users\theos\SpectroImg\Intensitet.xlsx", index=False, header=False)
