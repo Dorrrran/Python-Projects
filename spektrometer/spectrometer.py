@@ -120,7 +120,7 @@ while True:
     #När man trycker på v så tar men ett mät resultat OBS! Spektrometern måste kalibreras innan
     if cv2.waitKey(1) & 0xFF == ord("v"):
         cap.release()
-        cap = cv2.VideoCapture(1)
+        cap = cv2.VideoCapture(1)   #Laddar om kameran för att få bort bakgrunds "ljud" (ljus som kameran "hittar på")
         ret, frame = cap.read()
         time.sleep(0.3)
         Calibrated = CalibratedImage(frame,kal_top_left_rect, kal_bot_right_rect)
